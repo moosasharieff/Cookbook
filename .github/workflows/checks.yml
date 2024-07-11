@@ -23,4 +23,4 @@ jobs:
       - name: Testing
         uses: docker-compose run --rm app /bin/sh -c "python3 manage.py test"
       - name: Linting
-        user: docker-compose run --rm app /bin/sh -c "flake8"
+        uses: docker-compose run --rm app /bin/sh -c "flake8"
