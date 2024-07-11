@@ -21,6 +21,6 @@ jobs:
       - name: Checkout Git
         uses: actions/checkout@v2
       - name: Testing
-        uses: docker-compose run --rm app /bin/sh -c "python3 manage.py test"
+        run: docker-compose run --rm app /bin/sh -c "python3 manage.py test"
       - name: Linting
-        uses: docker-compose run --rm app /bin/sh -c "flake8"
+        run: docker-compose run --rm app /bin/sh -c "flake8"
