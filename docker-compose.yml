@@ -17,6 +17,8 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASSWORD=changeme
+    depends_on:
+      - db
 
   # Adding the database service
   db:
