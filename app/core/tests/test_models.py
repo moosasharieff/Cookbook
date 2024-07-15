@@ -35,10 +35,10 @@ class ModelTests(TestCase):
         """Emails provided by the users is Normalized
         and then saved into the db."""
         sample_email = [
-            ["test@EXAMPLE.COM", "test@example.com"],
-            ["test@Example.COM", "test@example.com"],
-            ["test@example.COM", "test@example.com"],
-            ["test@EXAMPLE.com", "test@example.com"],
+            ["Sample@EXAMPLE.COM", "Sample@example.com"],
+            ["SamPle@Example.COM", "SamPle@example.com"],
+            ["SamPLEe@example.COM", "SamPLEe@example.com"],
+            ["SAMPLE@EXAMPLE.com", "SAMPLE@example.com"],
         ]
 
         # Test Cases
