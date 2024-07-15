@@ -11,7 +11,6 @@ from django.contrib.auth.models import (
 )
 
 
-
 class UserManager(BaseUserManager):
     """Manager for User model."""
 
