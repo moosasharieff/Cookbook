@@ -29,3 +29,19 @@ class ModelTests(TestCase):
         self.assertEqual(user.email, email)
         # We use user.check_password() as we use hashing to check password
         self.assertTrue(user.check_password(password))
+
+
+    def test_user_email_normalized(self):
+        """Emails provided by the users is Normalized
+        and then saved into the db."""
+        sample_email = [
+            ["test@EXAMPLE.COM", "test@example.com"],
+            ["test@Example.COM", "test@example.com"],
+            ["test@example.COM", "test@example.com"],
+            ["test@EXAMPLE.com", "test@example.com"],
+        ]
+
+        # Test Cases
+        for inc_email, exp_email in sample_email:
+            user = get_user_model().objects.create_user(inc_email, "samplePassword123")
+            self.assertEqual(user.email, exp_email)
