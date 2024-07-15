@@ -10,7 +10,9 @@ services:
     volumes:
       - ./app:/app
     command: >
-      /bin/sh -c "python manage.py runserver 0.0.0.0:9876"
+      /bin/sh -c "python manage.py wait_for_db &&
+                  python manage.py migrate &&
+                  python manage.py runserver 0.0.0.0:9876"
     environment:
       # Adding database service environment variables to connect from the app service
       - DB_HOST=db
