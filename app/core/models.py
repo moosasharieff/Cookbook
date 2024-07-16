@@ -17,6 +17,8 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_field):
         """Create, save and return a new user."""
         # Self.model call `class: User` and inputs the attr
+        if not email:
+            raise ValueError("Email was not provided.")
         user = self.model(email=self.normalize_email(email), **extra_field)
         user.set_password(password)
         user.save(using=self._db)

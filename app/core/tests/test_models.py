@@ -42,3 +42,8 @@ class ModelTests(TestCase):
             user = get_user_model().objects.create_user(inc_email,
                                                         "samplePassword123")
             self.assertEqual(user.email, exp_email)
+
+    def test_raise_value_error_if_user_does_not_input_email(self):
+        """Test that creates a user without an email will raise a ValueError."""
+        with self.assertRaises(ValueError):
+            get_user_model().objects.create_user("", "testPassword123")
