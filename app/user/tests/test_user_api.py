@@ -40,6 +40,7 @@ class PublicUserAPITestClass(TestCase):
         self.assertEqual(user.email, payload['email'])
         self.assertTrue(user.check_password(payload['password']))
 
+
         # Asserting to check password in not present in response data
         self.assertNotIn('password', res.data)
 
