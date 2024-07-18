@@ -10,9 +10,11 @@ from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
 
+
 def create_user(**params):
     """Creates users directly into the database"""
     return get_user_model().objects.create_user(**params)
+
 
 class PublicUserAPITestClass(TestCase):
     def setUp(self):
@@ -39,7 +41,6 @@ class PublicUserAPITestClass(TestCase):
         user = get_user_model().objects.get(email=payload['email'])
         self.assertEqual(user.email, payload['email'])
         self.assertTrue(user.check_password(payload['password']))
-
 
         # Asserting to check password in not present in response data
         self.assertNotIn('password', res.data)
@@ -79,4 +80,3 @@ class PublicUserAPITestClass(TestCase):
         # Checks if user was created with less password characters
         user_exists = get_user_model().objects.filter(email=payload['email'])
         self.assertFalse(user_exists)
-
