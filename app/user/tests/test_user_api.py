@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
+TOKEN_URL = reverse('user:token')
 
 
 def create_user(**params):
@@ -63,7 +64,7 @@ class PublicUserAPITestClass(TestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_length_too_short_error(self):
-        """Test case to raise error that password lenght is less
+        """Test case to raise error that password length is less
         than 5 characters."""
         payload = {
             'email': 'test@example.com',
@@ -80,3 +81,72 @@ class PublicUserAPITestClass(TestCase):
         # Checks if user was created with less password characters
         user_exists = get_user_model().objects.filter(email=payload['email'])
         self.assertFalse(user_exists)
+
+    def test_create_token_for_valid_credentials(self):
+        """Test token is created successfully when user passed
+        correct credentials."""
+        user_details = {
+            'email': 'test@example.com',
+            'password': 'TestPass123',
+            'name': 'Test Name'
+        }
+        # Create user directly in db
+        create_user(**user_details)
+
+        # Create Token with HTTP Request
+        payload = {
+            'email': user_details['email'],
+            'password': user_details['password'],
+            'name': user_details['name']
+        }
+        res = self.client.post(TOKEN_URL, **payload)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('token', res.data)
+
+    def test_token_creation_fails_with_invalid_credentials(self):
+        """Test Token creation request fails when user inputs
+        incorrect credentials."""
+        user_details = {
+            'email': 'test@example.com',
+            'password': 'TestPass123',
+            'name': 'Test Name'
+        }
+        # Create user directly in db
+        create_user(**user_details)
+
+        # Try to create token with HTTP Request
+        payload = {
+            'email': user_details['email'],
+            'password': 'TestFailPassword',
+            'name': user_details['name']
+        }
+        res = self.client.post(TOKEN_URL, **payload)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', res.data)
+
+    def test_token_creation_fails_with_blank_password(self):
+        """Test token creation request will fail if the user inputs
+        blank email or password"""
+        user_details = {
+            'email': 'test@example.com',
+            'password': 'TestPass123',
+            'name': 'Test Name'
+        }
+        # Create user directly in db
+        create_user(**user_details)
+
+        # Try to create token with HTTP Request
+        payload = {
+            'email': user_details['email'],
+            'password': '',
+            'name': user_details['name'],
+        }
+        res = self.client.post(TOKEN_URL, **payload)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', res.data)
