@@ -97,9 +97,8 @@ class PublicUserAPITestClass(TestCase):
         payload = {
             'email': user_details['email'],
             'password': user_details['password'],
-            'name': user_details['name']
         }
-        res = self.client.post(TOKEN_URL, **payload)
+        res = self.client.post(TOKEN_URL, payload)
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -120,9 +119,8 @@ class PublicUserAPITestClass(TestCase):
         payload = {
             'email': user_details['email'],
             'password': 'TestFailPassword',
-            'name': user_details['name']
         }
-        res = self.client.post(TOKEN_URL, **payload)
+        res = self.client.post(TOKEN_URL, payload)
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
@@ -134,7 +132,6 @@ class PublicUserAPITestClass(TestCase):
         user_details = {
             'email': 'test@example.com',
             'password': 'TestPass123',
-            'name': 'Test Name'
         }
         # Create user directly in db
         create_user(**user_details)
@@ -143,9 +140,8 @@ class PublicUserAPITestClass(TestCase):
         payload = {
             'email': user_details['email'],
             'password': '',
-            'name': user_details['name'],
         }
-        res = self.client.post(TOKEN_URL, **payload)
+        res = self.client.post(TOKEN_URL, payload)
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
