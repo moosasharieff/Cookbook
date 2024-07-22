@@ -156,6 +156,7 @@ class PublicUserAPITestClass(TestCase):
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
+
 class PrivateUserAPITests(TestCase):
     """Test case for authorized user."""
     def setUp(self):
@@ -180,7 +181,7 @@ class PrivateUserAPITests(TestCase):
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertContains(res.data, {
+        self.assertEqual(res.data, {
             'name': 'Test Name',
             'email': 'test@example.com'
         })
@@ -196,7 +197,7 @@ class PrivateUserAPITests(TestCase):
         """Test successfully updating user data with 'PATCH' method."""
         payload = {
             'name': 'Updated Name',
-            'email': 'UpdatedTest@example.com'
+            'password': 'NewPass123'
         }
 
         res = self.client.patch(ME_URL, payload)
@@ -206,4 +207,3 @@ class PrivateUserAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(self.user.name, payload['name'])
         self.assertTrue(self.user.check_password(payload['password']))
-        self.assertContains(res.data, {'status_code': '200'})
