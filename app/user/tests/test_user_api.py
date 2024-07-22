@@ -10,6 +10,7 @@ from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+ME_URL = reverse('user:me')
 
 
 def create_user(**params):
@@ -146,3 +147,11 @@ class PublicUserAPITestClass(TestCase):
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('token', res.data)
+
+    def test_retrieve_data_failing_with_unauthorized_user(self):
+        """Test retrieving data failure when accessed unauthorized."""
+        # HTTP GET Request on 'ME_URL' Endpoint
+        res = self.client.get(ME_URL)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
