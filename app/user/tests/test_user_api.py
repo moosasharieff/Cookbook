@@ -155,3 +155,55 @@ class PublicUserAPITestClass(TestCase):
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+class PrivateUserAPITests(TestCase):
+    """Test case for authorized user."""
+    def setUp(self):
+        """Setting up environment for authorized test cases."""
+        # Creating user directly in db
+        user_creds = {
+            'name': 'Test Name',
+            'email': 'test@example.com',
+            'password': 'SuccessPassword123'
+        }
+        self.user = create_user(**user_creds)
+
+        # Instantiating APIClient
+        self.client = APIClient()
+
+        # Authenticating user
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_user_details_success(self):
+        """Retrieve user data successfully"""
+        res = self.client.get(ME_URL)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertContains(res.data, {
+            'name': 'Test Name',
+            'email': 'test@example.com'
+        })
+
+    def test_post_method_not_allowed(self):
+        """Test 'POST' method not allowed on 'ME_URL' Endpoint."""
+        res = self.client.post(ME_URL)
+
+        # Assetions
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_updating_user_data_success(self):
+        """Test successfully updating user data with 'PATCH' method."""
+        payload = {
+            'name': 'Updated Name',
+            'email': 'UpdatedTest@example.com'
+        }
+
+        res = self.client.patch(ME_URL, payload)
+        self.user.refresh_from_db()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertContains(res.data, {'status_code': '200'})
