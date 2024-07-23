@@ -15,7 +15,8 @@ from core.models import Recipe
 from ..serializers import RecipeSerializer
 
 
-RECIPE_URL = 'recipe:recipe-list'
+RECIPE_URL = reverse('recipe:recipe-list')
+
 
 def create_user(**params):
     """Creates user directly in db."""
@@ -28,6 +29,7 @@ def create_user(**params):
     user = get_user_model.objects.create_user(**defaults)
 
     return user
+
 
 def create_recipe(user, **params):
     """Create recipe directly in db."""
