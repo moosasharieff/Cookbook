@@ -21,12 +21,12 @@ RECIPE_URL = reverse('recipe:recipe-list')
 def create_user(**params):
     """Creates user directly in db."""
     defaults = {
-        'name': 'test@example.com',
+        'email': 'test@example.com',
         'password': 'testPassword123',
     }
 
     defaults.update(params)
-    user = get_user_model.objects.create_user(**defaults)
+    user = get_user_model().objects.create_user(**defaults)
 
     return user
 
@@ -83,7 +83,7 @@ class PrivateRecipeAPITests(TestCase):
         res = self.client.get(RECIPE_URL)
 
         # Fetching data from db
-        recipe = Recipe.objects.all().order_by('-d')
+        recipe = Recipe.objects.all().order_by('-id')
         serializer = RecipeSerializer(recipe, many=True)
 
         # Assertion
@@ -94,20 +94,20 @@ class PrivateRecipeAPITests(TestCase):
         """Test retrieving data for specific user."""
         # Creating users
         params = {
-            'name': 'test2@example.com',
+            'email': 'test2@example.com',
             'password': 'TestPassword321'
         }
         other_user = create_user(**params)
 
         # Creating recipes
         create_recipe(user=other_user)
-        create_recipe(user=self.client)
+        create_recipe(user=self.user)
 
         # HTTP Request to Endpoint
         res = self.client.get(RECIPE_URL)
 
         # Fetch details from db
-        recipe = Recipe.objects.filter(user=self.client)
+        recipe = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipe, many=True)
 
         # Assertions

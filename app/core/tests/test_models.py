@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 
 from .. import models
 
+
 class ModelTests(TestCase):
 
     def _create_user(self, **params):
@@ -70,7 +71,6 @@ class ModelTests(TestCase):
         # Assertions
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
-
 
     def test_create_recipe_success(self):
         """Test create recipe successfully in database"""
