@@ -231,10 +231,26 @@ class PrivateRecipeAPITests(TestCase):
 
         # HTTP 'PATCH' Request to update the user
         url = recipe_detail_url(recipe.id)
-        res = self.client.patch(url, payload)
+        self.client.patch(url, payload)
 
         # Refreshing the user in db
         recipe.refresh_from_db()
 
         # Assertion
         self.assertEqual(recipe.user, self.user)
+
+    def test_delete_recipe(self):
+        """Test deleting a recipe."""
+        # Creating a recipe
+        recipe = create_recipe(user=self.user)
+
+        # HTTP Request to delete the recipe
+        url = recipe_detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        # Fetching recipe data from db
+        is_recipe_present = Recipe.objects.filter(id=recipe.id).exists()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(is_recipe_present)
