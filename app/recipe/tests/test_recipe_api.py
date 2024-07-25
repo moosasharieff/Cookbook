@@ -154,3 +154,27 @@ class PrivateRecipeAPITests(TestCase):
         # Asserting values
         for key, value in payload.items():
             self.assertEqual(getattr(recipe_data, key), value)
+
+    def test_partial_update(self):
+        """Test updating the fields of the recipe partially."""
+        # Create a new recipe
+        recipe = create_recipe(user=self.user)
+
+        # Creating a payload
+        payload = {
+            'title': 'Updated sample title',
+            'time_minutes': 20,
+        }
+
+        # HTTP Request to make changes
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload)
+
+        # Refreshing recipe data from db
+        recipe.refresh_from_db()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.user, self.user)
