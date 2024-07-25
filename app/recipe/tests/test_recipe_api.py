@@ -14,7 +14,6 @@ from core.models import Recipe
 
 from ..serializers import RecipeSerializer, RecipeDetailSerializer
 
-
 RECIPE_URL = reverse('recipe:recipe-list')
 
 
@@ -54,6 +53,7 @@ def create_recipe(user, **params):
 
 class PublicRecipeAPITests(TestCase):
     """Test case of Recipe API for un-authorized user."""
+
     def setUp(self):
         """Setting up test environment."""
         # Init Test client
@@ -69,6 +69,7 @@ class PublicRecipeAPITests(TestCase):
 
 class PrivateRecipeAPITests(TestCase):
     """Test cases of Recipe APIs for autorized users."""
+
     def setUp(self):
         """Setting up test environment."""
         # Creating a user
@@ -207,3 +208,33 @@ class PrivateRecipeAPITests(TestCase):
         # Iterating and asserting
         for key, value in payload.items():
             self.assertEqual(getattr(recipe, key), value)
+
+    def test_updating_user_in_recipe_returns_no_success(self):
+        """Test changing creator of recipe returns no success."""
+        # Creating user and adding authentication to it.
+        creds = {
+                'email': 'otherUser@example.com',
+                'password': 'DiffPassword123',
+            }
+        new_user = create_user(**creds)
+
+        new_client = APIClient()
+        new_client.force_authenticate(new_user)
+
+        # Create a recipe
+        recipe = create_recipe(user=self.user)
+
+        # Creating Payload
+        payload = {
+            'user': new_user.id,
+        }
+
+        # HTTP 'PATCH' Request to update the user
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload)
+
+        # Refreshing the user in db
+        recipe.refresh_from_db()
+
+        # Assertion
+        self.assertEqual(recipe.user, self.user)
