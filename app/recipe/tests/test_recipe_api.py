@@ -72,12 +72,19 @@ class PrivateRecipeAPITests(TestCase):
 
     def setUp(self):
         """Setting up test environment."""
-        # Creating a user
+        # Creating a user and other user for testing
         self.user = create_user()
+        self.other_user = create_user(email='other_user@example.com', password='OtherPass123')
         # Init Test client
         self.client = APIClient()
+        self.other_client = APIClient()
         # Authenticate user
         self.client.force_authenticate(self.user)
+        self.other_client.force_authenticate(self.other_user)
+
+        # Create another user
+
+
 
     def test_retrieve_recipes(self):
         """Test retrieve recipes."""
@@ -254,3 +261,15 @@ class PrivateRecipeAPITests(TestCase):
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(is_recipe_present)
+
+    def test_delete_other_user_recipe_failure(self):
+        """Test resulting in failure when deteling other users recipe."""
+        # Create a recipe
+        recipe = create_recipe(user=self.user)
+
+        # HTTP Request from `other_user` to delete `self.user`'s recipe
+        url = recipe_detail_url(recipe.id)
+        res = self.other_client.delete(url)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
