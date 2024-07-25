@@ -17,6 +17,7 @@ from ..serializers import RecipeSerializer, RecipeDetailSerializer
 
 RECIPE_URL = reverse('recipe:recipe-list')
 
+
 def recipe_detail_url(recipe_id):
     """Returns custom recipe URL."""
     return reverse('recipe:recipe-detail', args=[recipe_id])
@@ -178,3 +179,31 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(recipe.title, payload['title'])
         self.assertEqual(recipe.time_minutes, payload['time_minutes'])
         self.assertEqual(recipe.user, self.user)
+
+    def test_full_update(self):
+        """Test updating all the fields of the recipe."""
+        # Creating a recipe
+        recipe = create_recipe(user=self.user)
+
+        # Payload to be updated
+        payload = {
+            'title': 'UpdatedSample Title Name',
+            'time_minutes': 15,
+            'price': Decimal('9.5'),
+            'description': 'Updated: This is a sample description.',
+            'link': 'https://updated_example.com',
+        }
+
+        # HTTP 'PUT' Request to update all fields
+        url = recipe_detail_url(recipe.id)
+        res = self.client.put(url, payload)
+
+        # Refreshing the recipe fields from db
+        recipe.refresh_from_db()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(recipe.user, self.user)
+        # Iterating and asserting
+        for key, value in payload.items():
+            self.assertEqual(getattr(recipe, key), value)
