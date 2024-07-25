@@ -74,17 +74,15 @@ class PrivateRecipeAPITests(TestCase):
         """Setting up test environment."""
         # Creating a user and other user for testing
         self.user = create_user()
-        self.other_user = create_user(email='other_user@example.com', password='OtherPass123')
+        self.other_user = create_user(
+            email='other_user@example.com',
+            password='OtherPass123')
         # Init Test client
         self.client = APIClient()
         self.other_client = APIClient()
         # Authenticate user
         self.client.force_authenticate(self.user)
         self.other_client.force_authenticate(self.other_user)
-
-        # Create another user
-
-
 
     def test_retrieve_recipes(self):
         """Test retrieve recipes."""
