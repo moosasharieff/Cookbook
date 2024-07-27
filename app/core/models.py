@@ -63,7 +63,21 @@ class Recipe(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
+    tags = models.ManyToManyField('Tag')
 
     def __str__(self):
         """Returns string representation of 'Recipe' model."""
         return self.title
+
+
+class Tag(models.Model):
+    """Class for creating tags and associating it with Recipe class."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        """Returns tags name."""
+        return self.name
