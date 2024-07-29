@@ -14,6 +14,9 @@ from ..serializers import TagSerializer
 
 TAG_URL = reverse('recipe:tag-list')
 
+def tag_detail_url(tag_id):
+    return reverse('recipe:tag-details', args=[tag_id])
+
 
 def create_user(email, password):
     """Create user directly into the db."""
