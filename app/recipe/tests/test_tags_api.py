@@ -14,6 +14,7 @@ from ..serializers import TagSerializer
 
 TAG_URL = reverse('recipe:tag-list')
 
+
 def tag_detail_url(tag_id):
     return reverse('recipe:tag-detail', args=[tag_id])
 
@@ -95,7 +96,7 @@ class PrivateTagAPITests(TestCase):
         tag = Tag.objects.create(user=self.user, name='name Dinner')
 
         # HTTP Request
-        payload = {'name':'Dessert'}
+        payload = {'name': 'Dessert'}
         url = tag_detail_url(tag.id)
         res = self.client.patch(url, payload)
         tag.refresh_from_db()
