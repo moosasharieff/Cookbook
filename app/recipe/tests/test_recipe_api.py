@@ -51,6 +51,10 @@ def create_recipe(user, **params):
     return recipe
 
 
+def create_tag(user, name):
+    """Create tags"""
+    return Tag.objects.create(user=user, name=name)
+
 class PublicRecipeAPITests(TestCase):
     """Test case of Recipe API for un-authorized user."""
 
@@ -338,3 +342,57 @@ class PrivateRecipeAPITests(TestCase):
                 name=tag['name']
             )
             self.assertTrue(exists)
+
+    def test_create_tag_on_recipe_update(self):
+        """Test creating a new tag when we are updating the recipe."""
+        # Creating a new recipe in the db
+        recipe = create_recipe(user=self.user)
+
+        # Updating tags on HTTP Request on Recipe Payload
+        payload = {'tags': [{'name': 'Lunch'}]}
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Fetching the tag
+        new_tag = Tag.objects.get(user=self.user, name='Lunch')
+        self.assertIn(new_tag, recipe.tags.all())
+
+    def test_updating_recipe_existing_tag(self):
+        """Test assigning a existing tag when updating a recipe."""
+        # Create a new recipe & tag directly in the db
+        breakfast_tag = create_tag(user=self.user, name='Breakfast')
+        recipe = create_recipe(user=self.user)
+        recipe.tags.add(breakfast_tag)
+
+        # HTTP Requst
+        lunch_tag = create_tag(user=self.user, name='Lunch')
+        # cannot user `lunch_tag` alone as it would need to be json serialized.
+        payload = {'tags': [{'name': lunch_tag.name}]}
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        """ Assertions """
+        # Status
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Validating tags db data
+        self.assertIn(lunch_tag, recipe.tags.all())
+        self.assertNotIn(breakfast_tag, recipe.tags.all())
+
+    def test_clear_tags_from_recipe(self):
+        """Test clearing all the tags from the user's recipe."""
+        # Creating a recipe with tags
+        tags = create_tag(self.user, 'Dessert')
+        recipe = create_recipe(user=self.user)
+        recipe.tags.add(tags)
+
+        # HTTP Response
+        payload = {'tags': []}
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        """ Assertions """
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Validating data
+        self.assertEqual(recipe.tags.count(), 0)
