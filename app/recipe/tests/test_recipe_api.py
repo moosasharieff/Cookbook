@@ -55,6 +55,7 @@ def create_tag(user, name):
     """Create tags"""
     return Tag.objects.create(user=user, name=name)
 
+
 class PublicRecipeAPITests(TestCase):
     """Test case of Recipe API for un-authorized user."""
 

@@ -68,7 +68,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
 
-
 class RecipeDetailSerializer(RecipeSerializer):
     """Serializer to fetch single recipe details."""
     class Meta(RecipeSerializer.Meta):
