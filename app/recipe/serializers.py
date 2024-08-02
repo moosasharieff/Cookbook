@@ -4,11 +4,12 @@ Serializers for recipe APIs.
 """
 from rest_framework import serializers
 
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for the Tags"""
+
     class Meta:
         model = Tag
         fields = ['id', 'name']
@@ -70,7 +71,17 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeDetailSerializer(RecipeSerializer):
     """Serializer to fetch single recipe details."""
+
     class Meta(RecipeSerializer.Meta):
         """Inherited attributes from `cls: RecipeSerializer`
         to build on this class."""
         fields = RecipeSerializer.Meta.fields + ['description']
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializer for the Ingredients"""
+
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name']
+        read_only = ['id']

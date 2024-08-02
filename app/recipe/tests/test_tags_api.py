@@ -31,6 +31,7 @@ def create_tag(user, tag_name):
 
 class PublicTagAPITests(TestCase):
     """Test case for unauthenticate API requests on Tags."""
+
     def setUp(self):
         """Setting up testing environment."""
         self.client = APIClient()
@@ -46,6 +47,7 @@ class PublicTagAPITests(TestCase):
 
 class PrivateTagAPITests(TestCase):
     """Test case for testing authenticated Tag API Requests."""
+
     def setUp(self):
         """Setting up testing environment."""
         # Create user

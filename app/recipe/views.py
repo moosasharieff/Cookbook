@@ -6,10 +6,11 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 from .serializers import (RecipeSerializer,
                           RecipeDetailSerializer,
-                          TagSerializer)
+                          TagSerializer,
+                          IngredientSerializer)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -49,4 +50,22 @@ class TagViewSet(viewsets.GenericViewSet,
 
     def get_queryset(self):
         """Filter queryset to output data for authenticated user only."""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+
+
+class IngredientViewSet(viewsets.GenericViewSet,
+                        mixins.ListModelMixin):
+    """Manage ingredients in the database"""
+    serializer_class = IngredientSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    # `var: queryset` is being called in `get_queryset()` method.
+    queryset = Ingredient.objects.all()
+
+    def get_queryset(self):
+        """
+        By default, queryset return list of all the
+        ingredients in the database. We customize this
+        method to return only logged-in users ingredient list.
+        """
         return self.queryset.filter(user=self.request.user).order_by('-name')
