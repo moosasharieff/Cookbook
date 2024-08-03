@@ -82,7 +82,7 @@ class PrivateIngredientTestCase(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_patch_method_to_update_ingredients_successfully(self):
-        """Test to checking if updating the ingredient succeeds."""
+        """Test API call to delete an ingredient."""
         # Creating ingredient
         ingredient = create_ingredient(user=self.user, name='Onion')
 
@@ -99,3 +99,18 @@ class PrivateIngredientTestCase(TestCase):
         self.assertEqual(ingredient.name, payload['name'])
         self.assertEqual(res.data['name'], ingredient.name)
 
+    def test_delete_ingredient_from_db(self):
+        """Test API call to delete an ingredient."""
+        # Create an ingredient
+        ingredient = create_ingredient(user=self.user, name='Carrot')
+
+        # HTTP Request
+        url = ingredient_detail_url(ingredient.id)
+        res = self.client.delete(url)
+
+        # Fetch ingredients of user
+        db_ingredient_data = Ingredient.objects.filter(user=self.user)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(db_ingredient_data.exists())
