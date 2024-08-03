@@ -27,6 +27,11 @@ def create_ingredient(user, name):
     return Ingredient.objects.create(user=user, name=name)
 
 
+def ingredient_detail_url(ingredient_id):
+    """Create ingredient directly in db."""
+    return reverse('recipe:ingredient-detail', args=[ingredient_id])
+
+
 class PublicIngredientTestCase(TestCase):
     def setUp(self):
         """Setting up testing environment."""
@@ -75,3 +80,22 @@ class PrivateIngredientTestCase(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn(ingredient.name, res.data[0]['name'])
         self.assertEqual(res.data, serializer.data)
+
+    def test_patch_method_to_update_ingredients_successfully(self):
+        """Test to checking if updating the ingredient succeeds."""
+        # Creating ingredient
+        ingredient = create_ingredient(user=self.user, name='Onion')
+
+        # HTTP Request
+        payload = {'name': 'Peas'}
+        url = ingredient_detail_url(ingredient.id)
+        res = self.client.patch(url, payload, format='json')
+
+        # Refresh data from db
+        ingredient.refresh_from_db()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(ingredient.name, payload['name'])
+        self.assertEqual(res.data['name'], ingredient.name)
+
