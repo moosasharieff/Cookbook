@@ -10,7 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 
 from ..serializers import RecipeSerializer, RecipeDetailSerializer
 
@@ -54,6 +54,11 @@ def create_recipe(user, **params):
 def create_tag(user, name):
     """Create tags"""
     return Tag.objects.create(user=user, name=name)
+
+
+def create_ingredient(user, name):
+    """Create ingredient."""
+    return Ingredient.objects.create(user=user, name=name)
 
 
 class PublicRecipeAPITests(TestCase):
@@ -397,3 +402,56 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # Validating data
         self.assertEqual(recipe.tags.count(), 0)
+
+    def test_create_recipe_with_ingredient_success(self):
+        """Test creating recipe along with ingredient(s)."""
+        # Create Payload
+        payload = {
+            'title': 'Sample Title Name',
+            'time_minutes': 25,
+            'price': Decimal('10.5'),
+            'description': 'This is a sample description.',
+            'link': 'https://example.com',
+            'ingredients': [
+                    {
+                        'name': 'Tomato'
+                    },
+                    {
+                        'name': 'Onion'
+                    }
+                ]
+            }
+
+        # HTTP Request
+        res = self.client.post(RECIPE_URL, payload, format='json')
+
+        # Fetch data from db
+        recipe_db_data = Recipe.objects.filter(user=self.user)
+
+        # Assertion
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(recipe_db_data.exists())
+        self.assertEqual(recipe_db_data.count(), 1)
+
+    def test_create_recipe_with_existing_ingredient(self):
+        """Test creating recipe with API with an existing ingredient."""
+        # Create Ingredient
+        create_ingredient(user=self.user, name='Aubergine')
+
+        # Create Payload
+        payload = {
+            'title': 'Sample Title Name',
+            'time_minutes': 25,
+            'price': Decimal('10.5'),
+            'description': 'This is a sample description.',
+            'link': 'https://example.com',
+            'ingredients': [{
+                'name': 'Aubergine'
+            }]
+        }
+
+        # HTTP Request
+        res = self.client.post(RECIPE_URL, payload, format='json')
+
+        # Assertion
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
