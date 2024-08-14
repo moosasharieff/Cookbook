@@ -15,6 +15,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
         read_only = ['id']
 
+
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for the Ingredients"""
 
@@ -22,6 +23,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = ['id', 'name']
         read_only = ['id']
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializers for recipes."""
@@ -80,11 +82,17 @@ class RecipeSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Updating attributes of the recipe objects."""
         tags = validated_data.pop('tags', None)
+        ingredients = validated_data.pop('ingredients', None)
 
         if tags is not None:
             # Implement code for adding tags here
             instance.tags.clear()
             self._get_or_create_tags(instance, tags)
+
+        # Updating ingredients inside recipe
+        if ingredients is not None:
+            instance.ingredients.clear()
+            self._get_or_create_ingredients(instance, ingredients)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
