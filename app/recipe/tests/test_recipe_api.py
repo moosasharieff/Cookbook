@@ -228,9 +228,9 @@ class PrivateRecipeAPITests(TestCase):
         """Test changing creator of recipe returns no success."""
         # Creating user and adding authentication to it.
         creds = {
-                'email': 'otherUser@example.com',
-                'password': 'DiffPassword123',
-            }
+            'email': 'otherUser@example.com',
+            'password': 'DiffPassword123',
+        }
         new_user = create_user(**creds)
 
         new_client = APIClient()
@@ -413,30 +413,41 @@ class PrivateRecipeAPITests(TestCase):
             'description': 'This is a sample description.',
             'link': 'https://example.com',
             'ingredients': [
-                    {
-                        'name': 'Tomato'
-                    },
-                    {
-                        'name': 'Onion'
-                    }
-                ]
-            }
+                {
+                    'name': 'Tomato'
+                },
+                {
+                    'name': 'Onion'
+                }
+            ]
+        }
 
         # HTTP Request
         res = self.client.post(RECIPE_URL, payload, format='json')
 
         # Fetch data from db
-        recipe_db_data = Recipe.objects.filter(user=self.user)
+        recipes_db_data = Recipe.objects.filter(user=self.user)
+        recipe = recipes_db_data[0]
 
-        # Assertion
+        # Assertions
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(recipe_db_data.exists())
-        self.assertEqual(recipe_db_data.count(), 1)
+        self.assertEqual(recipes_db_data.count(), 1)
+        self.assertEqual(recipe.ingredients.count(), 2)
+
+        # Iterate over ingredients
+        for ingredient in payload['ingredients']:
+            ingredient_exists = recipe.ingredients.filter(
+                user=self.user,
+                name=ingredient['name']
+            ).exists()
+
+            # Assertion
+            self.assertTrue(ingredient_exists)
 
     def test_create_recipe_with_existing_ingredient(self):
         """Test creating recipe with API with an existing ingredient."""
         # Create Ingredient
-        create_ingredient(user=self.user, name='Aubergine')
+        ingredient = create_ingredient(user=self.user, name='Aubergine')
 
         # Create Payload
         payload = {
@@ -445,13 +456,36 @@ class PrivateRecipeAPITests(TestCase):
             'price': Decimal('10.5'),
             'description': 'This is a sample description.',
             'link': 'https://example.com',
-            'ingredients': [{
-                'name': 'Aubergine'
-            }]
+            'ingredients': [
+                {
+                    'name': 'Aubergine'
+                },
+                {
+                    'name': 'Potato'
+                }
+            ]
         }
 
         # HTTP Request
         res = self.client.post(RECIPE_URL, payload, format='json')
 
+        # Fetching Recipe data from db
+        recipe_db_data = Recipe.objects.filter(user=self.user)
+        recipe = recipe_db_data[0]
+
         # Assertion
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(recipe_db_data.count(), 1)
+        self.assertEqual(recipe.ingredients.count(), 2)
+        self.assertIn(ingredient, recipe.ingredients.all())
+
+        # Iterate through Ingredients
+        for ingredient in payload['ingredients']:
+
+            ingredient_exists = recipe.ingredients.filter(
+                user=self.user,
+                name=ingredient['name']
+            ).exists()
+
+            # Assertion
+            self.assertTrue(ingredient_exists)
