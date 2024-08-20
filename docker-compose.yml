@@ -20,7 +20,8 @@ services:
       - DB_USER=devuser
       - DB_PASSWORD=changeme
     depends_on:
-      - db
+      db:
+        condition: "service_healthy"
 
   # Adding the database service
   db:
