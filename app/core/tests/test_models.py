@@ -3,13 +3,33 @@
 
 Testing models.
 """
-
+from decimal import Decimal
 from django.test import TestCase
 # Default user model for Auth
 from django.contrib.auth import get_user_model
 
+from .. import models
+
+
+def create_user(email, password):
+    """Create user directly in the db."""
+    return get_user_model().objects.create_user(
+        email=email, password=password
+    )
+
 
 class ModelTests(TestCase):
+
+    def _create_user(self, **params):
+        """Create user directly in the db"""
+        if not params:
+            params = {
+                'name': 'Test User',
+                'email': 'test@example.com',
+                'password': 'TestPassword123',
+            }
+        return get_user_model().objects.create_user(**params)
+
     """Test models."""
     def test_create_user_with_email_successful(self):
         """Test user with email instead of username is successful."""
@@ -58,3 +78,27 @@ class ModelTests(TestCase):
         # Assertions
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_recipe_success(self):
+        """Test create recipe successfully in database"""
+        user = self._create_user()
+        recipe = models.Recipe.objects.create(
+            user=user,
+            title='Sample recipe title',
+            time_minutes=5,
+            price=Decimal('5.50'),
+            description='This is sample description.',
+        )
+
+        self.assertEqual(str(recipe), recipe.title)
+
+    def test_create_tag(self):
+        """Test create tag to associate with recipes."""
+        # Create user
+        user = create_user('test@example.com', 'testPass@123')
+
+        # Create Tag
+        tag = models.Tag.objects.create(user=user, name='Tag1')
+
+        # Assertion
+        self.assertEqual(str(tag), tag.name)

@@ -2,7 +2,7 @@
 # app/core/models.py
 Models for Django application
 """
-
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -51,3 +51,33 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Overriding in system to use `email` instead of
     # username when Authenticating.
     USERNAME_FIELD = "email"
+
+
+class Recipe(models.Model):
+    """Class for creating recipes from the user."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    time_minutes = models.IntegerField()
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    link = models.CharField(max_length=255, blank=True)
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        """Returns string representation of 'Recipe' model."""
+        return self.title
+
+
+class Tag(models.Model):
+    """Class for creating tags and associating it with Recipe class."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        """Returns tags name."""
+        return self.name
