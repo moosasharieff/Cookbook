@@ -2,6 +2,8 @@
 # app/recipe/serializers.py
 Serializers for recipe APIs.
 """
+from typing import List
+
 from rest_framework import serializers
 
 from core.models import Recipe, Tag
@@ -25,11 +27,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'time_minutes', 'link', 'tags']
         read_only_fields = ['id']
 
-    def create(self, validated_data: dict) -> Recipe:
-        """Modifying create() method to add functionality to add
-        tags to the recipe."""
-        tags = validated_data.pop('tags', [])
-        recipe = Recipe.objects.create(**validated_data)
+    def _get_or_create_tags(self, recipe: Recipe, tags: List[dict]) -> None:
+        """Method fetches data from the db. If not found creates it."""
         auth_user = self.context['request'].user
 
         # Adding tags to the recipe
@@ -40,7 +39,31 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             recipe.tags.add(tag_obj)
 
+    def create(self, validated_data: dict) -> Recipe:
+        """Modifying create() method to create recipe functionality."""
+        tags = validated_data.pop('tags', [])
+        recipe = Recipe.objects.create(**validated_data)
+
+        # Adding tags to the recipe
+        self._get_or_create_tags(recipe, tags)
+
         return recipe
+
+    def update(self, instance: Recipe, validated_data: dict) -> Recipe:
+        """Modifying update() method to update functionality to
+        modify recipes."""
+        tags = validated_data.pop('tags', None)
+
+        if tags is not None:
+            instance.tags.clear()
+            # Update Tags to the recipe
+            self._get_or_create_tags(instance, tags)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
 
 
 class RecipeDetailSerializer(RecipeSerializer):
