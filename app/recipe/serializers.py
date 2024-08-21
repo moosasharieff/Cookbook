@@ -6,7 +6,7 @@ from typing import List
 
 from rest_framework import serializers
 
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -72,3 +72,13 @@ class RecipeDetailSerializer(RecipeSerializer):
         """Inherited attributes from `cls: RecipeSerializer`
         to build on this class."""
         fields = RecipeSerializer.Meta.fields + ['description']
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializer to convert data while sending and retrieving
+    ingredient database information."""
+
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name']
+        read_only = ['id']
