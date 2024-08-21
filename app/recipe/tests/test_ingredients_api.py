@@ -113,3 +113,16 @@ class PrivateTestsIngredientAPI(TestCase):
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(db_data.exists())
+
+    def test_create_ingredient(self):
+        """Test create ingredient via API."""
+        # Payload
+        payload = {
+            'name': 'Onion'
+        }
+        # HTTP Request
+        res = self.client.post(INGREDIENT_URL, payload)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data['name'], payload['name'])
