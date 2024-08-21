@@ -22,6 +22,12 @@ def create_ingredient(user: str, name: str) -> Ingredient:
     return Ingredient.objects.create(user=user, name=name)
 
 
+def ingredient_detail_url(ingredient_id: int) -> reverse:
+    """Return a auto-generated URL string to Update/Delete
+    a particular ingredient."""
+    return reverse('recipe:ingredient-detail', args=[ingredient_id])
+
+
 class PublicTestsIngredientAPI(TestCase):
     """Public / Unauthorized Test cases for ingredient api."""
     def setUp(self):
@@ -74,3 +80,20 @@ class PrivateTestsIngredientAPI(TestCase):
         self.assertEqual(serialized.data, res.data)
         self.assertEqual(res.data[0]['id'], ingredient.id)
         self.assertEqual(res.data[0]['name'], ingredient.name)
+
+    def test_update_ingredient(self):
+        """Test update ingredient."""
+        # Create ingredient directly in the db
+        ingredient = create_ingredient(user=self.user, name='Tomato')
+
+        # HTTP Request
+        payload = {
+            'name': 'Onion'
+        }
+        url = ingredient_detail_url(ingredient.id)
+        res = self.client.put(url, payload, format='json')
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], ingredient.id)
+        self.assertEqual(res.data['name'], payload['name'])
