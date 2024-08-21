@@ -126,3 +126,15 @@ class PrivateTestsIngredientAPI(TestCase):
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data['name'], payload['name'])
+
+    def test_list_single_ingredient(self):
+        """Test retrieve single ingredient upon entering ingredient id."""
+        # Create an ingredient in db
+        ingredient = create_ingredient(user=self.user, name='Banana')
+
+        # HTTP Request
+        url = ingredient_detail_url(ingredient.id)
+        res = self.client.get(url)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
