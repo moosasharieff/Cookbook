@@ -64,6 +64,7 @@ class Recipe(models.Model):
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
     tags = models.ManyToManyField('Tag')
+    ingredients = models.ManyToManyField('Ingredient')
 
     def __str__(self):
         """Returns string representation of 'Recipe' model."""
@@ -80,4 +81,17 @@ class Tag(models.Model):
 
     def __str__(self):
         """Returns tags name."""
+        return self.name
+
+
+class Ingredient(models.Model):
+    """Schema for Ingredient database."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        """String representation on Ingredient database."""
         return self.name
