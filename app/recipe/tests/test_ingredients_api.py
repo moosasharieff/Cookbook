@@ -74,4 +74,3 @@ class PrivateTestsIngredientAPI(TestCase):
         self.assertEqual(serialized.data, res.data)
         self.assertEqual(res.data[0]['id'], ingredient.id)
         self.assertEqual(res.data[0]['name'], ingredient.name)
-
