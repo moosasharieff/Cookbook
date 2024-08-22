@@ -413,7 +413,7 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(recipe.tags.count(), 0)
 
     def test_create_recipe_and_ingredient(self):
-        """Create new recipe with new ingredient."""
+        """Test creating new recipe with new ingredient."""
         # HTTP Request
         payload = {
             'title': 'Sample Title Name',
@@ -444,7 +444,7 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(response_data['name'], serialized_data['name'])
 
     def test_create_recipe_with_existing_ingredient(self):
-        """Create new recipe with existing ingredient"""
+        """Test creating new recipe with existing ingredient"""
         # Create an ingredient
         ingredient = create_ingredient(
             user=self.user,
@@ -477,7 +477,7 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(response_data['id'], ingredient.id)
 
     def test_retrieve_existing_recipe_with_existing_ingredient(self):
-        """Read existing recipe with existing ingredient"""
+        """Test reading existing recipe with existing ingredient"""
         # Create Recipe and Ingredient and add ingredient to it.
         ingredient = create_ingredient(user=self.user,
                                        ingredient_name='Banana')
@@ -496,7 +496,7 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(res_data['name'], ingredient.name)
 
     def test_retrieving_existing_recipe_with_multiple_ingredients(self):
-        """Read existing recipe with multiple existing ingredient"""
+        """Test reading existing recipe with multiple existing ingredient"""
         # Create Recipe and Ingredient and add ingredient to it.
         ingredient1 = create_ingredient(user=self.user,
                                         ingredient_name='Banana')
@@ -518,3 +518,59 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(res_data[0]['name'], ingredient1.name)
         self.assertEqual(res_data[1]['id'], ingredient2.id)
         self.assertEqual(res_data[1]['name'], ingredient2.name)
+
+    def test_update_recipe_with_new_ingredient(self):
+        """Test Updating existing recipe with new ingredient"""
+        # Create recipe
+        recipe = create_recipe(user=self.user)
+
+        # HTTP Request
+        payload = {
+            'ingredients': [
+                {'name': 'Brinjal'},
+                {'name': 'Carrot'},
+            ]
+        }
+
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Asserting to check ingredients present in recipe?
+        for ingredient in payload['ingredients']:
+            exists = Ingredient.objects.filter(
+                user=self.user,
+                name=ingredient['name']
+            ).exists()
+
+            self.assertTrue(exists)
+
+    def test_update_recipe_with_existing_ingredient(self):
+        """Test Updating existing recipe with existing ingredient"""
+        # Create recipe and ingredients
+        recipe = create_recipe(user=self.user)
+        create_ingredient(user=self.user, ingredient_name='Carrot')
+        create_ingredient(user=self.user, ingredient_name='Banana')
+
+        # HTTP Request
+        payload = {
+            'ingredients': [
+                {'name': 'Banana'},
+                {'name': 'Carrot'},
+            ]
+        }
+
+        url = recipe_detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Asserting to check ingredients present in recipe?
+        for ingredient in payload['ingredients']:
+            exists = Ingredient.objects.filter(
+                user=self.user,
+                name=ingredient['name']
+            ).exists()
+
+            self.assertTrue(exists)
