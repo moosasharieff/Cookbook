@@ -79,14 +79,20 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance: Recipe, validated_data: dict) -> Recipe:
-        """Modifying update() method to update functionality to
-        modify recipes."""
+        """Overriding update() method to allow writing tags
+         and ingredients to the recipe."""
         tags = validated_data.pop('tags', None)
+        ingredients = validated_data.pop('ingredients', None)
 
         if tags is not None:
             instance.tags.clear()
             # Update Tags to the recipe
             self._get_or_create_tags(instance, tags)
+
+        if ingredients is not None:
+            instance.ingredients.clear()
+            # Update ingredients to the recipe
+            self._get_or_create_ingredients(instance, ingredients)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
