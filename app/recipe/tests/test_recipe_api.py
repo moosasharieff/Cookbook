@@ -574,3 +574,25 @@ class PrivateRecipeAPITests(TestCase):
             ).exists()
 
             self.assertTrue(exists)
+
+    def test_delete_recipe_with_ingredient(self):
+        """Test deleting existing recipe which already has an ingredient"""
+        # Create recipe and ingredient directly in db
+        # add ingredient to the recipe
+        recipe = create_recipe(user=self.user)
+        ingredient = create_ingredient(user=self.user,
+                                       ingredient_name='Potato')
+        recipe.ingredients.add(ingredient)
+
+        # HTTP Request
+        url = recipe_detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        # Fetch data from db
+        recipe_exists = Recipe.objects.filter(
+            user=self.user,
+            id=recipe.id).exists()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(recipe_exists)
