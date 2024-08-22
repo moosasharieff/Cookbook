@@ -13,6 +13,22 @@ from .serializers import (RecipeSerializer,
                           IngredientSerializer)
 
 
+class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
+                            mixins.ListModelMixin,
+                            mixins.UpdateModelMixin,
+                            mixins.DestroyModelMixin,
+                            mixins.CreateModelMixin,
+                            mixins.RetrieveModelMixin):
+    """Class to be inherited by any class which needs to get
+    associated with the recipe API."""
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter queryset to output data for authenticated user only."""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
     """View for managing Recipe API."""
     serializer_class = RecipeDetailSerializer
@@ -38,36 +54,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class TagViewSet(viewsets.GenericViewSet,
-                 mixins.ListModelMixin,
-                 mixins.UpdateModelMixin,
-                 mixins.DestroyModelMixin):
+class TagViewSet(BaseRecipeAttrViewSet):
     """Manage tags in the database."""
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        """Filter queryset to output data for authenticated user only."""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
 
 
-class IngredientViewSet(viewsets.GenericViewSet,
-                        mixins.ListModelMixin,
-                        mixins.UpdateModelMixin,
-                        mixins.DestroyModelMixin,
-                        mixins.CreateModelMixin,
-                        mixins.RetrieveModelMixin,):
+class IngredientViewSet(BaseRecipeAttrViewSet):
     """Manage ingredients in database."""
     serializer_class = IngredientSerializer
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
     queryset = Ingredient.objects.all()
-
-    def get_queryset(self):
-        """Filter queryset to output data for authenticated user only."""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
 
     def perform_create(self, serializer):
         """API for creating new ingredient."""
