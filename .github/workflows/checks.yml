@@ -5,8 +5,7 @@ on:
   push:
     branches:
       - main
-      - dev
-      - dev2
+      - feat_br_ingredients
 
 jobs:
   testing-and-linting:
