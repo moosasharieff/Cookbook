@@ -475,3 +475,46 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(res.data, serialized.data[0])
         self.assertEqual(response_data['name'], ingredient.name)
         self.assertEqual(response_data['id'], ingredient.id)
+
+    def test_retrieve_existing_recipe_with_existing_ingredient(self):
+        """Read existing recipe with existing ingredient"""
+        # Create Recipe and Ingredient and add ingredient to it.
+        ingredient = create_ingredient(user=self.user,
+                                       ingredient_name='Banana')
+        recipe = create_recipe(user=self.user)
+        recipe.ingredients.add(ingredient)
+
+        # HTTP Request
+        url = recipe_detail_url(recipe.id)
+        res = self.client.get(url)
+        res_data = res.data['ingredients'][0]
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], recipe.id)
+        self.assertEqual(res_data['id'], ingredient.id)
+        self.assertEqual(res_data['name'], ingredient.name)
+
+    def test_retrieving_existing_recipe_with_multiple_ingredients(self):
+        """Read existing recipe with multiple existing ingredient"""
+        # Create Recipe and Ingredient and add ingredient to it.
+        ingredient1 = create_ingredient(user=self.user,
+                                        ingredient_name='Banana')
+        ingredient2 = create_ingredient(user=self.user,
+                                        ingredient_name='Apple')
+        recipe = create_recipe(user=self.user)
+        recipe.ingredients.add(ingredient1)
+        recipe.ingredients.add(ingredient2)
+
+        # HTTP Request
+        url = recipe_detail_url(recipe.id)
+        res = self.client.get(url)
+        res_data = res.data['ingredients']
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], recipe.id)
+        self.assertEqual(res_data[0]['id'], ingredient1.id)
+        self.assertEqual(res_data[0]['name'], ingredient1.name)
+        self.assertEqual(res_data[1]['id'], ingredient2.id)
+        self.assertEqual(res_data[1]['name'], ingredient2.name)
