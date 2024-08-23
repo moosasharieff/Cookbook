@@ -91,7 +91,21 @@ class Ingredient(models.Model):
         on_delete=models.CASCADE,
     )
     name = models.CharField(max_length=255)
+    nutrients = models.ManyToManyField('Nutrient')
 
     def __str__(self):
         """String representation on Ingredient database."""
+        return self.name
+
+
+class Nutrient(models.Model):
+    """Schema for Nutrient Database"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=25)
+    grams = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
         return self.name
