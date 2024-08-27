@@ -72,7 +72,7 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
 
 
 class NutrientViewSet(viewsets.GenericViewSet,
-                      mixins.ListModelMixin,):
+                      mixins.ListModelMixin):
     """Manages Nutrients in database."""
     serializer_class = NutrientSerializer
     authentication_classes = [TokenAuthentication]
