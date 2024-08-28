@@ -72,7 +72,8 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
 
 
 class NutrientViewSet(viewsets.GenericViewSet,
-                      mixins.ListModelMixin):
+                      mixins.ListModelMixin,
+                      mixins.CreateModelMixin,):
     """Manages Nutrients in database."""
     serializer_class = NutrientSerializer
     authentication_classes = [TokenAuthentication]
@@ -83,3 +84,7 @@ class NutrientViewSet(viewsets.GenericViewSet,
         """Overriding this method to retrieve only
         authenticated user data for nutrients."""
         return Nutrient.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        """Create API for creating a new nutrient."""
+        serializer.save(user=self.request.user)

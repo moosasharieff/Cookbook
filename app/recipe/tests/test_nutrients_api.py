@@ -94,3 +94,28 @@ class PrivateNutrientAPITests(TestCase, BaseClass):
         self.assertEqual(res.data[0]['id'], nutrient.id)
         self.assertEqual(res.data[0]['name'], nutrient.name)
         self.assertEqual(res.data[0]['grams'], gram_val)
+
+    def test_create_single_nutrient(self):
+        """Test creating a nutrient via API Call."""
+        # Payload
+        payload = {
+            'name': 'Potasium',
+            'grams': '0.33'
+        }
+
+        # HTTP Request
+        res = self.client.post(self.NUTRIENT_URL, payload)
+
+        # Fetch data from db
+        # Serialize JSON Data with Db Data
+        nutrient = Nutrient.objects.all().order_by('-name')
+        serialized_data = NutrientSerializer(nutrient, many=True)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # Validating response data
+        self.assertEqual(res.data['name'], payload['name'])
+        self.assertEqual(res.data['grams'], payload['grams'])
+        # Validating db data
+        self.assertEqual(serialized_data.data[0]['name'], payload['name'])
+        self.assertEqual(serialized_data.data[0]['grams'], payload['grams'])
