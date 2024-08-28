@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - feat_br_ingredients
+      - feat_br_nutrients
 
 jobs:
   testing-and-linting:
