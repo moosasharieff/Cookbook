@@ -184,3 +184,23 @@ class PrivateNutrientAPITests(TestCase, BaseClass):
         # Validate Database data
         self.assertEqual(serialized_data.data[0]['name'], payload['name'])
         self.assertEqual(serialized_data.data[0]['grams'], payload['grams'])
+
+    def test_delete_nutrient(self):
+        """Test deleting the nutrient via API."""
+        # Create nutrient directly in db
+        nutrient = self.create_nutrient(
+            user=self.user, name='Protein', grams='10'
+        )
+
+        # HTTP Request
+        url = self.nutrient_detail_url(nutrient.id)
+        res = self.client.delete(url)
+
+        # Query Database
+        db_data = Nutrient.objects.filter(
+            user=self.user, id=nutrient.id
+        )
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(db_data.exists())

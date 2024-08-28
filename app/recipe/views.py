@@ -74,7 +74,8 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
 class NutrientViewSet(viewsets.GenericViewSet,
                       mixins.ListModelMixin,
                       mixins.CreateModelMixin,
-                      mixins.UpdateModelMixin):
+                      mixins.UpdateModelMixin,
+                      mixins.DestroyModelMixin):
     """Manages Nutrients in database."""
     serializer_class = NutrientSerializer
     authentication_classes = [TokenAuthentication]
