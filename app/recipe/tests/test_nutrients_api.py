@@ -30,6 +30,10 @@ class BaseClass:
             user=user, name=name, grams=Decimal(grams)
         )
 
+    def nutrient_detail_url(self, nutrient_id: int) -> reverse:
+        """Create reverse URL string PATCH, PUT & DELETE Methods."""
+        return reverse('recipe:nutrient-detail', args=[nutrient_id])
+
 
 class PublicNutrientAPITests(TestCase, BaseClass):
     """Public test cases which does not
@@ -58,10 +62,8 @@ class PrivateNutrientAPITests(TestCase, BaseClass):
     2. Read single nutrient
     3. Read multiple nutrients
     U ->
-    4. Update an existing nutrient with PATCH METHOD
-    5. Update a new nutrient PATCH METHOD
-    6. Update an existing nutrient with PUT METHOD
-    7. Update a new nutrient with PUT METHOD
+    4. Update nutrient PATCH METHOD
+    5. Update nutrient with PUT METHOD
     D ->
     8. Delete the nutrient
     """
@@ -117,5 +119,68 @@ class PrivateNutrientAPITests(TestCase, BaseClass):
         self.assertEqual(res.data['name'], payload['name'])
         self.assertEqual(res.data['grams'], payload['grams'])
         # Validating db data
+        self.assertEqual(serialized_data.data[0]['name'], payload['name'])
+        self.assertEqual(serialized_data.data[0]['grams'], payload['grams'])
+
+    def test_updating_existing_nutrient_partially(self):
+        """Test updating an existing nutrient partially with PATCH METHOD"""
+        # Create nutrient
+        nutrient = self.create_nutrient(
+            user=self.user, name='Calcium', grams='3.97'
+        )
+
+        # Payload
+        payload = {
+            'grams': '2.97'
+        }
+
+        # HTTP Request
+        url = self.nutrient_detail_url(nutrient.id)
+        res = self.client.patch(url, payload, format='json')
+
+        # Query Database
+        db_data = Nutrient.objects.filter(
+            user=self.user, id=nutrient.id
+        )
+        serialized_data = NutrientSerializer(db_data, many=True)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Validate response data
+        self.assertEqual(res.data['name'], nutrient.name)
+        self.assertEqual(res.data['grams'], payload['grams'])
+        # Validate Database data
+        self.assertEqual(serialized_data.data[0]['name'], nutrient.name)
+        self.assertEqual(serialized_data.data[0]['grams'], payload['grams'])
+
+    def test_updating_existing_nutrient_completely(self):
+        """Test updating an existing nutrient completely with PUT METHOD"""
+        # Create nutrient
+        nutrient = self.create_nutrient(
+            user=self.user, name='Calcium', grams='3.97'
+        )
+
+        # Payload
+        payload = {
+            'name': 'Potasium',
+            'grams': '4.00'
+        }
+
+        # HTTP Request
+        url = self.nutrient_detail_url(nutrient.id)
+        res = self.client.put(url, payload, format='json')
+
+        # Query Database
+        db_data = Nutrient.objects.filter(
+            user=self.user, id=nutrient.id
+        )
+        serialized_data = NutrientSerializer(db_data, many=True)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Validate response data
+        self.assertEqual(res.data['name'], payload['name'])
+        self.assertEqual(res.data['grams'], payload['grams'])
+        # Validate Database data
         self.assertEqual(serialized_data.data[0]['name'], payload['name'])
         self.assertEqual(serialized_data.data[0]['grams'], payload['grams'])
