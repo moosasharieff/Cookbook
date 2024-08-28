@@ -113,3 +113,16 @@ class ModelTests(TestCase):
 
         # Assertions
         self.assertEqual(str(ingredient), ingredient.name)
+
+    def test_create_nutrient(self):
+        """Test create nutrients associated with ingredients in db"""
+        # Create user
+        user = create_user('test@example.com', 'testPass@123')
+
+        # create_nutrients
+        nutrient = models.Nutrient.objects.create(user=user,
+                                                  name='Calcium',
+                                                  grams=5.00,)
+
+        # Assertions
+        self.assertEqual(str(nutrient), nutrient.name)
