@@ -14,10 +14,24 @@ from core.models import Nutrient # noqa
 
 from ..serializers import NutrientSerializer # noqa
 
-NUTRIENT_URL = reverse('recipe:nutrient-list')
+
+class BaseClass:
+    NUTRIENT_URL = reverse('recipe:nutrient-list')
+
+    def create_user(self, email: str, password: str) -> get_user_model:
+        """Private Method: Create user directly in the database."""
+        return get_user_model().objects.create(
+            email=email, password=password
+        )
+
+    def create_nutrient(self, user: str, name: str, grams: float) -> Nutrient:
+        "Private Method: Create nutrient directly in the database."
+        return Nutrient.objects.create(
+            user=user, name=name, grams=Decimal(grams)
+        )
 
 
-class PublicNutrientAPITests(TestCase):
+class PublicNutrientAPITests(TestCase, BaseClass):
     """Public test cases which does not
     require user authentication."""
     def setUp(self):
@@ -28,13 +42,13 @@ class PublicNutrientAPITests(TestCase):
     def test_retrieve_nutrient_list(self):
         """Test retriving list of nutrients."""
         # HTTP Request
-        res = self.client.get(NUTRIENT_URL)
+        res = self.client.get(self.NUTRIENT_URL)
 
         # Assertion
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateNutrientAPITests(TestCase):
+class PrivateNutrientAPITests(TestCase, BaseClass):
     """Private test cases which require user authentication.
 
     # Possible CRUD API test cases
@@ -51,11 +65,10 @@ class PrivateNutrientAPITests(TestCase):
     D ->
     8. Delete the nutrient
     """
-
     def setUp(self):
         """Setting up testing environment."""
         # Create user
-        self.user = self._create_user(
+        self.user = self.create_user(
             email='test@example.com', password='testPass@123'
         )
         # Create API Test Client
@@ -63,29 +76,14 @@ class PrivateNutrientAPITests(TestCase):
         # Authenticate user with the test client
         self.client.force_authenticate(self.user)
 
-    @classmethod
-    def _create_user(self, email: str, password: str) -> get_user_model:
-        """Private Method: Create user directly in the database."""
-        return get_user_model().objects.create(
-            email=email, password=password
-        )
-
-    @classmethod
-    def _create_nutrient(self, user: str, name: str, grams: float) -> Nutrient:
-        "Private Method: Create nutrient directly in the database."
-        return Nutrient.objects.create(
-            user=user, name=name, grams=Decimal(grams)
-        )
-
     def test_list_all_nutrients_of_user(self):
         """Test read ingredient via API call."""
         # Create nutrient directly in the db
-        nutrient = self._create_nutrient(user=self.user,
-                                         name='Calcium',
-                                         grams=5.00)
+        nutrient = self.create_nutrient(
+            user=self.user, name='Calcium', grams=5.00)
 
         # HTTP Request
-        res = self.client.get(NUTRIENT_URL)
+        res = self.client.get(self.NUTRIENT_URL)
 
         # Formatting data
         gram_val = float(nutrient.grams)
