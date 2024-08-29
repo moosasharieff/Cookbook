@@ -1,4 +1,6 @@
 
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -6,7 +8,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient
+from core.models import Ingredient, Nutrient
 
 from ..serializers import IngredientSerializer
 
@@ -21,13 +23,24 @@ class TestRequirementsClass:
             email=email, password=password
         )
 
-    def _create_ingredient(self, user: str, name: str) -> Ingredient:
+    def _create_ingredient(self,
+                           user: get_user_model,
+                           name: str) -> Ingredient:
         return Ingredient.objects.create(user=user, name=name)
 
     def _ingredient_detail_url(self, ingredient_id: int) -> reverse:
         """Return a auto-generated URL string to Update/Delete
         a particular ingredient."""
         return reverse('recipe:ingredient-detail', args=[ingredient_id])
+
+    def _create_nutrient(self,
+                         user: get_user_model,
+                         nutrient_name: str,
+                         grams: float) -> Nutrient:
+
+        return Nutrient.objects.create(user=user,
+                                       name=nutrient_name,
+                                       grams=Decimal(grams))
 
 
 class PublicTestsIngredientAPI(TestCase, TestRequirementsClass):
@@ -140,3 +153,86 @@ class PrivateTestsIngredientAPI(TestCase, TestRequirementsClass):
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+
+class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
+    """Test cases for Ingredients and Nutrients."""
+    # Todo: Possible test cases for Ingredients and Nutrients.
+    # Todo: 1. Create new nutrient with new ingredient
+    # Todo: 2. Create new ingredient with existing nutrient
+    # Todo: 5. Partially update nutrient on an ingredient.
+    # Todo: 6. Fully update nutrient on an ingredient.
+    # Todo: 7. Delete ingredient with nutrient.
+
+    def setUp(self):
+        """Setting up testing environment."""
+        # Create user
+        self.user = self._create_user('test@example.com', 'password@123')
+        # API Test Client
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_retrieve_ingredient_with_single_nutrient(self):
+        """Test reading ingredient with a single nutrient"""
+        # Create an ingredient
+        ingredient = self._create_ingredient(user=self.user, name='Onion')
+        # Create nutrient
+        nutrient = self._create_nutrient(user=self.user,
+                                         nutrient_name='Calcium',
+                                         grams='2.99')
+
+        # Adding nutrient to ingredient
+        ingredient.nutrients.add(nutrient)
+
+        # HTTP Request
+        url = self._ingredient_detail_url(ingredient.id)
+        res = self.client.get(url)
+
+        # Parsing data
+        res_data = res.data['nutrients'][0]
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], ingredient.id)
+        self.assertEqual(res_data['id'], nutrient.id)
+        self.assertEqual(res_data['name'], nutrient.name)
+        self.assertEqual(res_data['grams'], str(nutrient.grams))
+
+    def test_retrieve_ingredient_with_multiple_nutrients(self):
+        """Test retrieving a single ingredient with multiple
+        nutrients."""
+        # Create ingredients
+        ingredient = self._create_ingredient(
+            user=self.user, name='Potato'
+        )
+
+        # Creating nutrients
+        nutrient1 = self._create_nutrient(
+            user=self.user, nutrient_name='Calcium', grams='0.99'
+        )
+        nutrient2 = self._create_nutrient(
+            user=self.user, nutrient_name='Potasium', grams='1.15'
+        )
+
+        # Adding nutrients to ingredients
+        ingredient.nutrients.add(nutrient1)
+        ingredient.nutrients.add(nutrient2)
+
+        # HTTP Request
+        url = self._ingredient_detail_url(ingredient.id)
+        res = self.client.get(url)
+
+        # Parse data
+        res_nutrients = res.data['nutrients']
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], ingredient.id)
+        # Validating 1st nutrient
+        self.assertEqual(res_nutrients[0]['id'], nutrient1.id)
+        self.assertEqual(res_nutrients[0]['name'], nutrient1.name)
+        self.assertEqual(res_nutrients[0]['grams'], str(nutrient1.grams))
+        # Validating 2nd nutrient
+        self.assertEqual(res_nutrients[1]['id'], nutrient2.id)
+        self.assertEqual(res_nutrients[1]['name'], nutrient2.name)
+        self.assertEqual(res_nutrients[1]['grams'], str(nutrient2.grams))

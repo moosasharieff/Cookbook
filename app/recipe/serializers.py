@@ -109,16 +109,6 @@ class RecipeDetailSerializer(RecipeSerializer):
         fields = RecipeSerializer.Meta.fields + ['description']
 
 
-class IngredientSerializer(serializers.ModelSerializer):
-    """Serializer to convert data while sending and retrieving
-    ingredient database information."""
-
-    class Meta:
-        model = Ingredient
-        fields = ['id', 'name']
-        read_only = ['id']
-
-
 class NutrientSerializer(serializers.ModelSerializer):
     """Serializer to convert data while sending and retrieving
     nutrient database information"""
@@ -126,4 +116,18 @@ class NutrientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nutrient
         fields = ['id', 'name', 'grams']
+        read_only = ['id']
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializer to convert data while sending and retrieving
+    ingredient database information."""
+
+    # Adding NutrientSerializer so we can retrieve
+    # nutrients when we fetch Ingredients via API.
+    nutrients = NutrientSerializer(many=True, required=False)
+
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name', 'nutrients']
         read_only = ['id']
