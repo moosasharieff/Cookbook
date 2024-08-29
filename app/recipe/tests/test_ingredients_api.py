@@ -11,24 +11,26 @@ from core.models import Ingredient
 from ..serializers import IngredientSerializer
 
 
-INGREDIENT_URL = reverse('recipe:ingredient-list')
+class TestRequirementsClass:
+    """Attributes and Methods which can be inherited and used or
+    used directly by calling the class."""
+    _INGREDIENT_URL = reverse('recipe:ingredient-list')
+
+    def _create_user(self, email: str, password: str) -> get_user_model:
+        return get_user_model().objects.create_user(
+            email=email, password=password
+        )
+
+    def _create_ingredient(self, user: str, name: str) -> Ingredient:
+        return Ingredient.objects.create(user=user, name=name)
+
+    def _ingredient_detail_url(self, ingredient_id: int) -> reverse:
+        """Return a auto-generated URL string to Update/Delete
+        a particular ingredient."""
+        return reverse('recipe:ingredient-detail', args=[ingredient_id])
 
 
-def create_user(email: str, password: str) -> get_user_model:
-    return get_user_model().objects.create_user(email=email, password=password)
-
-
-def create_ingredient(user: str, name: str) -> Ingredient:
-    return Ingredient.objects.create(user=user, name=name)
-
-
-def ingredient_detail_url(ingredient_id: int) -> reverse:
-    """Return a auto-generated URL string to Update/Delete
-    a particular ingredient."""
-    return reverse('recipe:ingredient-detail', args=[ingredient_id])
-
-
-class PublicTestsIngredientAPI(TestCase):
+class PublicTestsIngredientAPI(TestCase, TestRequirementsClass):
     """Public / Unauthorized Test cases for ingredient api."""
     def setUp(self):
         """Setting up testing environment."""
@@ -39,13 +41,13 @@ class PublicTestsIngredientAPI(TestCase):
         """Test retrieving ingredient of a user resulting in a failure."""
 
         # HTTP Request
-        res = self.client.get(INGREDIENT_URL)
+        res = self.client.get(self._INGREDIENT_URL)
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateTestsIngredientAPI(TestCase):
+class PrivateTestsIngredientAPI(TestCase, TestRequirementsClass):
     """User authorized test cases.
     # Possible API test cases on CRUD
     0. C -> Create an ingredient
@@ -57,7 +59,7 @@ class PrivateTestsIngredientAPI(TestCase):
     def setUp(self):
         """Setting up test environment."""
         # Create user directly in db
-        self.user = create_user('test@example.com', 'password@123')
+        self.user = self._create_user('test@example.com', 'password@123')
         # Instantiate Test Client
         self.client = APIClient()
         # Authorized user
@@ -66,10 +68,10 @@ class PrivateTestsIngredientAPI(TestCase):
     def test_list_ingredients(self):
         """Test returning list of ingredient for authenticated users."""
         # Create ingredient directly in db
-        ingredient = create_ingredient(user=self.user, name='Potato')
+        ingredient = self._create_ingredient(user=self.user, name='Potato')
 
         # HTTP Request
-        res = self.client.get(INGREDIENT_URL)
+        res = self.client.get(self._INGREDIENT_URL)
 
         # Serialize JSON Data with Db Data
         ingredients = Ingredient.objects.all().order_by('-name')
@@ -84,13 +86,13 @@ class PrivateTestsIngredientAPI(TestCase):
     def test_update_ingredient(self):
         """Test update ingredient."""
         # Create ingredient directly in the db
-        ingredient = create_ingredient(user=self.user, name='Tomato')
+        ingredient = self._create_ingredient(user=self.user, name='Tomato')
 
         # HTTP Request
         payload = {
             'name': 'Onion'
         }
-        url = ingredient_detail_url(ingredient.id)
+        url = self._ingredient_detail_url(ingredient.id)
         res = self.client.put(url, payload, format='json')
 
         # Assertions
@@ -101,10 +103,10 @@ class PrivateTestsIngredientAPI(TestCase):
     def test_delete_ingredient(self):
         """Test deleting an ingredient."""
         # Create ingredient directly in the db
-        ingredient = create_ingredient(user=self.user, name='Onion')
+        ingredient = self._create_ingredient(user=self.user, name='Onion')
 
         # HTTP Request
-        url = ingredient_detail_url(ingredient.id)
+        url = self._ingredient_detail_url(ingredient.id)
         res = self.client.delete(url)
 
         # Fetching data from db
@@ -121,7 +123,7 @@ class PrivateTestsIngredientAPI(TestCase):
             'name': 'Onion'
         }
         # HTTP Request
-        res = self.client.post(INGREDIENT_URL, payload)
+        res = self.client.post(self._INGREDIENT_URL, payload)
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -130,10 +132,10 @@ class PrivateTestsIngredientAPI(TestCase):
     def test_list_single_ingredient(self):
         """Test retrieve single ingredient upon entering ingredient id."""
         # Create an ingredient in db
-        ingredient = create_ingredient(user=self.user, name='Banana')
+        ingredient = self._create_ingredient(user=self.user, name='Banana')
 
         # HTTP Request
-        url = ingredient_detail_url(ingredient.id)
+        url = self._ingredient_detail_url(ingredient.id)
         res = self.client.get(url)
 
         # Assertions
