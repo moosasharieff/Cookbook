@@ -236,3 +236,80 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
         self.assertEqual(res_nutrients[1]['id'], nutrient2.id)
         self.assertEqual(res_nutrients[1]['name'], nutrient2.name)
         self.assertEqual(res_nutrients[1]['grams'], str(nutrient2.grams))
+
+    def test_create_ingredient_with_existing_nutrient(self):
+        """Test creating new recipe with existing ingredient"""
+        # Create nutrient
+        nutrient = self._create_nutrient(user=self.user,
+                                         nutrient_name='Calcium',
+                                         grams='3.23')
+
+        # HTTP Request
+        payload = {
+            'name': 'Banana',
+            'nutrients': [
+                {'name': 'Calcium', 'grams': '3.23'},
+            ]
+        }
+
+        res = self.client.post(self._INGREDIENT_URL, payload, format='json')
+        response_data = res.data['nutrients'][0]
+
+        # Fetch db data
+        db_data = Ingredient.objects.filter(user=self.user)
+        serialized = IngredientSerializer(db_data, many=True)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data, serialized.data[0])
+        self.assertEqual(response_data['name'], nutrient.name)
+        self.assertEqual(response_data['id'], nutrient.id)
+
+    def test_create_new_ingredient_with_new_nutrients(self):
+        """Test creating new ingredient with multiple new nutrients"""
+        # Payload
+        payload = {
+            'name': 'Orange',
+            'nutrients': [
+                {'name': 'Vitamin C', 'grams': '4.04'},
+                {'name': 'Vitamin A', 'grams': '2.40'},
+            ]
+        }
+
+        # HTTP Request
+        res = self.client.post(self._INGREDIENT_URL, payload, format='json')
+
+        # Query Database
+        db_data = Ingredient.objects.filter(user=self.user)
+        serialized = IngredientSerializer(db_data, many=True)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        # Validating Response data
+        self.assertEqual(
+            res.data['nutrients'][0]['name'],
+            payload['nutrients'][0]['name'])
+        self.assertEqual(
+            res.data['nutrients'][0]['grams'],
+            payload['nutrients'][0]['grams'])
+        self.assertEqual(
+            res.data['nutrients'][1]['name'],
+            payload['nutrients'][1]['name'])
+        self.assertEqual(
+            res.data['nutrients'][1]['grams'],
+            payload['nutrients'][1]['grams'])
+
+        # Validating Database data
+        self.assertEqual(
+            serialized.data[0]['nutrients'][0]['name'],
+            payload['nutrients'][0]['name'])
+        self.assertEqual(
+            serialized.data[0]['nutrients'][0]['grams'],
+            payload['nutrients'][0]['grams'])
+        self.assertEqual(
+            serialized.data[0]['nutrients'][1]['name'],
+            payload['nutrients'][1]['name'])
+        self.assertEqual(
+            serialized.data[0]['nutrients'][1]['grams'],
+            payload['nutrients'][1]['grams'])

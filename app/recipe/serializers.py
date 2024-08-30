@@ -17,14 +17,52 @@ class TagSerializer(serializers.ModelSerializer):
         read_only = ['id']
 
 
+class NutrientSerializer(serializers.ModelSerializer):
+    """Serializer to convert data while sending and retrieving
+    nutrient database information"""
+    class Meta:
+        model = Nutrient
+        fields = ['id', 'name', 'grams']
+        read_only = ['id']
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer to convert data while sending and retrieving
     ingredient database information."""
+    # Adding NutrientSerializer to retrieve nutrients when
+    # creating, retrieving and updating Ingredients via API.
+    nutrients = NutrientSerializer(many=True, required=False)
 
     class Meta:
         model = Ingredient
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'nutrients']
         read_only = ['id']
+
+    def _get_or_create_nutrients(self, ingredient: Ingredient,
+                                 nutrients: Nutrient) -> None:
+        """Method fetches ingredient data from the db.
+        If not found creates it."""
+        auth_user = self.context['request'].user
+
+        # Adding ingredients to the recipe
+        for nutrient in nutrients:
+            nutrient_obj, created = Nutrient.objects.get_or_create(
+                user=auth_user,
+                **nutrient
+            )
+            # Add nutrient's object to ingredient
+            ingredient.nutrients.add(nutrient_obj)
+
+    def create(self, validated_data: dict) -> Recipe:
+        """Modifying create() method to create recipe functionality."""
+        nutrients = validated_data.pop('nutrients', [])
+
+        ingredient = Ingredient.objects.create(**validated_data)
+
+        # Adding tags/ingredients to the recipe
+        self._get_or_create_nutrients(ingredient, nutrients)
+
+        return ingredient
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -107,27 +145,3 @@ class RecipeDetailSerializer(RecipeSerializer):
         """Inherited attributes from `cls: RecipeSerializer`
         to build on this class."""
         fields = RecipeSerializer.Meta.fields + ['description']
-
-
-class NutrientSerializer(serializers.ModelSerializer):
-    """Serializer to convert data while sending and retrieving
-    nutrient database information"""
-
-    class Meta:
-        model = Nutrient
-        fields = ['id', 'name', 'grams']
-        read_only = ['id']
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    """Serializer to convert data while sending and retrieving
-    ingredient database information."""
-
-    # Adding NutrientSerializer so we can retrieve
-    # nutrients when we fetch Ingredients via API.
-    nutrients = NutrientSerializer(many=True, required=False)
-
-    class Meta:
-        model = Ingredient
-        fields = ['id', 'name', 'nutrients']
-        read_only = ['id']
