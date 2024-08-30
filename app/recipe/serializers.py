@@ -6,7 +6,7 @@ from typing import List
 
 from rest_framework import serializers
 
-from core.models import Recipe, Tag, Ingredient
+from core.models import Recipe, Tag, Ingredient, Nutrient
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -17,14 +17,50 @@ class TagSerializer(serializers.ModelSerializer):
         read_only = ['id']
 
 
-class IngredientSerializer(serializers.ModelSerializer):
+class NutrientSerializer(serializers.ModelSerializer):
     """Serializer to convert data while sending and retrieving
-    ingredient database information."""
+    nutrient database information."""
 
     class Meta:
-        model = Ingredient
+        model = Nutrient
         fields = ['id', 'name']
         read_only = ['id']
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializers for recipes."""
+    nutrients = NutrientSerializer(many=True, required=False)
+
+    class Meta:
+        model = Nutrient
+        fields = ['id', 'name', 'nutrients']
+        read_only = ['id']
+
+    def _get_or_create_nutrients(self, ingredient: Ingredient,
+                                   nutrients: Nutrient) -> None:
+        """Method fetches ingredient data from the db.
+        If not found creates it."""
+        auth_user = self.context['request'].user
+
+        # Adding nutrients to the ingredient
+        for nutrient in nutrients:
+            nutrient_obj, created = Nutrient.objects.get_or_create(
+                user=auth_user,
+                **nutrient
+            )
+            # Add ingredient's object to recipe
+            ingredient.nutrients.add(nutrient_obj)
+
+    def create(self, validated_data: dict) -> Ingredient:
+        """Modifying create() method to create recipe functionality."""
+        nutrients = validated_data.pop('nutrients', [])
+
+        ingredient = Ingredient.objects.create(**validated_data)
+
+        # Adding nutrients to the Ingredient
+        self._get_or_create_nutrients(ingredient, nutrients)
+
+        return ingredient
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -107,13 +143,3 @@ class RecipeDetailSerializer(RecipeSerializer):
         """Inherited attributes from `cls: RecipeSerializer`
         to build on this class."""
         fields = RecipeSerializer.Meta.fields + ['description']
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    """Serializer to convert data while sending and retrieving
-    ingredient database information."""
-
-    class Meta:
-        model = Ingredient
-        fields = ['id', 'name']
-        read_only = ['id']

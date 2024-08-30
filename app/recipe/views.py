@@ -6,11 +6,12 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Recipe, Tag, Ingredient
+from core.models import Recipe, Tag, Ingredient, Nutrient
 from .serializers import (RecipeSerializer,
                           RecipeDetailSerializer,
                           TagSerializer,
-                          IngredientSerializer)
+                          IngredientSerializer,
+                          NutrientSerializer)
 
 
 class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
@@ -64,6 +65,16 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
     """Manage ingredients in database."""
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+
+    def perform_create(self, serializer):
+        """API for creating new ingredient."""
+        serializer.save(user=self.request.user)
+
+
+class NutrientViewSet(BaseRecipeAttrViewSet):
+    """Manage ingredients in database."""
+    serializer_class = NutrientSerializer
+    queryset = Nutrient.objects.all()
 
     def perform_create(self, serializer):
         """API for creating new ingredient."""

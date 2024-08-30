@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient
+from core.models import Ingredient, Nutrient
 
 from ..serializers import IngredientSerializer
 
@@ -20,6 +20,9 @@ def create_user(email: str, password: str) -> get_user_model:
 
 def create_ingredient(user: str, name: str) -> Ingredient:
     return Ingredient.objects.create(user=user, name=name)
+
+def create_nutrient(user: str, name: str) -> Nutrient:
+    return Nutrient.objects.create(user=user, name=name)
 
 
 def ingredient_detail_url(ingredient_id: int) -> reverse:
@@ -138,3 +141,48 @@ class PrivateTestsIngredientAPI(TestCase):
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_existing_ingredient_with_existing_nutrient(self):
+        """Test reading existing recipe with existing ingredient"""
+        # Create Recipe and Ingredient and add ingredient to it.
+        nutrient = create_nutrient(user=self.user, name='Calcium')
+        ingredient = create_ingredient(user=self.user, name='Banana')
+        ingredient.nutrients.add(nutrient)
+
+        # HTTP Request
+        url = ingredient_detail_url(ingredient.id)
+        res = self.client.get(url)
+        res_data = res.data['nutrients'][0]
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], ingredient.id)
+        self.assertEqual(res_data['id'], nutrient.id)
+        self.assertEqual(res_data['name'], nutrient.name)
+
+    def test_create_recipe_with_existing_ingredient(self):
+        """Test creating new recipe with existing ingredient"""
+        # Create nutrient
+        nutrient = create_nutrient(user=self.user, name='Calcium')
+
+        # HTTP Request
+        payload = {
+            'name': 'Banana',
+            'nutrients': [
+                {'name': 'Calcium'},
+            ]
+        }
+
+        res = self.client.post(INGREDIENT_URL, payload, format='json')
+        print(res.data)
+        response_data = res.data['nutrients'][0]
+
+        # Fetch db data
+        db_data = Ingredient.objects.filter(user=self.user)
+        serialized = IngredientSerializer(db_data, many=True)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data, serialized.data[0])
+        self.assertEqual(response_data['name'], nutrient.name)
+        self.assertEqual(response_data['id'], nutrient.id)
