@@ -399,3 +399,79 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
         self.assertEqual(
             res.data['nutrients'][0]['name'],
             slz_nutrients[0]['name'])
+
+    def test_delete_ingredient_with_nutrient(self):
+        """Test successfully deleting ingredient which had nutrient with it."""
+        # Create ingredient
+        ingredient = self._create_ingredient(user=self.user, name='Potato')
+        # Create nutrient
+        nutrient = self._create_nutrient(user=self.user,
+                                         nutrient_name='Calcium',
+                                         grams='2.99')
+        # Adding nutrient to ingredient
+        ingredient.nutrients.add(nutrient)
+
+        # HTTP Request
+        url = self._ingredient_detail_url(ingredient.id)
+        res = self.client.delete(url)
+
+        # Query Database
+        db_data = Ingredient.objects.filter(
+            user=self.user,
+            id=ingredient.id
+        )
+        nutri_db_data = Nutrient.objects.filter(
+            user=self.user,
+            id=nutrient.id
+        )
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(db_data.exists())
+        self.assertTrue(nutri_db_data.exists())
+
+    def test_delete_ingredient_and_nutrient_post_creation(self):
+        """Test deleting ingredient and nutrient after creating
+        it through API. We need to make sure that nutrient is
+        deleted if we delete ingredient if both are created at
+        the same time."""
+        # Payload
+        payload = {
+            'name': 'Potato',
+            'nutrients': [
+                {'name': 'Calcium', 'grams': '1.99'}
+            ]
+        }
+
+        # Creating ingredient and nutrient
+        res = self.client.post(self._INGREDIENT_URL, payload, format='json')
+        print('res:', res.data)
+
+        # Parsing data
+        data = res.data
+        ingre_id = data['id']
+        ingre_name = data['name']
+        nutri_name = data['nutrients'][0]['name']
+        nutri_grams = data['nutrients'][0]['grams']
+
+        # Assertions to find if Ingredients and Nutrients
+        # were created.
+        self.assertEqual(ingre_name, payload['name'])
+        self.assertEqual(nutri_name, payload['nutrients'][0]['name'])
+        self.assertEqual(nutri_grams, payload['nutrients'][0]['grams'])
+
+        # Delete Ingredient
+        url = self._ingredient_detail_url(ingre_id)
+        res = self.client.delete(url)
+
+        # Query Database
+        db_data = Ingredient.objects.filter(
+            user=self.user, id=ingre_id
+        )
+        nutri_db_data = Ingredient.objects.filter(
+            user=self.user, id=ingre_id
+        )
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(db_data.exists())
+        self.assertFalse(nutri_db_data.exists())
