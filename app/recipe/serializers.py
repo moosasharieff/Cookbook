@@ -64,6 +64,24 @@ class IngredientSerializer(serializers.ModelSerializer):
 
         return ingredient
 
+    def update(self, instance: Ingredient, validated_data: dict) -> Ingredient:
+        """Overriding update() method to update nutrients mapped
+        inside ingredient."""
+        nutrients = validated_data.pop('nutrients', [])
+
+        if nutrients is not None:
+            # Removing nutrients from ingredients
+            instance.nutrients.clear()
+            # Adding nutrients to ingredients
+            self._get_or_create_nutrients(instance, nutrients)
+
+        # Adding attr:values in validating data to ingredients
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializers for recipes."""

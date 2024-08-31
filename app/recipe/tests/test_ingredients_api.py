@@ -313,3 +313,89 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
         self.assertEqual(
             serialized.data[0]['nutrients'][1]['grams'],
             payload['nutrients'][1]['grams'])
+
+    def test_update_nutrients_inside_ingredient_partiallY(self):
+        """Test Updating the nutrient inside ingredient partially."""
+        # Create ingredient
+        ingredient = self._create_ingredient(
+            user=self.user, name='Potato')
+        # Create nutrient
+        nutrient = self._create_nutrient(
+            user=self.user, nutrient_name='Calcium', grams='2.97'
+        )
+        # Adding nutrient to ingredient
+        ingredient.nutrients.add(nutrient)
+
+        # payload
+        payload = {
+            'name': 'Tomato',
+            'nutrients': [
+                {'name': 'Potasium', 'grams': '2.97'},
+            ]
+        }
+        # HTTP Request
+        url = self._ingredient_detail_url(ingredient.id)
+        res = self.client.patch(url, payload, format='json')
+
+        # Query database
+        db_data = Ingredient.objects.filter(
+            user=self.user, id=ingredient.id
+        )
+        serialized = IngredientSerializer(db_data, many=True)
+        slz_nutrients = serialized.data[0]['nutrients']
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], ingredient.id)
+        # Validate Response data
+        self.assertEqual(res.data['name'], payload['name'])
+        self.assertEqual(
+            res.data['nutrients'][0]['grams'],
+            payload['nutrients'][0]['grams'])
+        # Validate Database data
+        self.assertEqual(res.data['nutrients'][0]['name'],
+                         slz_nutrients[0]['name'])
+
+    def test_update_nutrient_inside_ingredient_completely(self):
+        """Test Update nutrient inside ingredient completely."""
+        """Test Updating the nutrient inside ingredient partially."""
+        # Create ingredient
+        ingredient = self._create_ingredient(
+            user=self.user, name='Potato')
+        # Create nutrient
+        nutrient = self._create_nutrient(
+            user=self.user, nutrient_name='Calcium', grams='2.97'
+        )
+        # Adding nutrient to ingredient
+        ingredient.nutrients.add(nutrient)
+
+        # payload
+        payload = {
+            'name': 'Tomato',
+            'nutrients': [
+                {'name': 'Potasium', 'grams': '1.22'},
+            ]
+        }
+        # HTTP Request
+        url = self._ingredient_detail_url(ingredient.id)
+        res = self.client.put(url, payload, format='json')
+
+        # Query database
+        db_data = Ingredient.objects.filter(
+            user=self.user, id=ingredient.id
+        )
+        serialized = IngredientSerializer(db_data, many=True)
+        slz_nutrients = serialized.data[0]['nutrients']
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['id'], ingredient.id)
+        # Validate Response data
+        self.assertEqual(res.data['name'], payload['name'])
+        self.assertEqual(
+            res.data['nutrients'][0]['grams'],
+            payload['nutrients'][0]['grams'])
+        # Validate Database data
+        self.assertEqual(
+            res.data['nutrients'][0]['name'],
+            slz_nutrients[0]['name'])
