@@ -9,6 +9,7 @@ services:
       - "9876:9876"
     volumes:
       - ./app:/app
+      - dev-static-data:/vol/web
     command: >
       /bin/sh -c "python manage.py wait_for_db &&
                   python manage.py migrate &&
@@ -35,3 +36,4 @@ services:
 # Volume service stores db data in container
 volumes:
   dev-db-data:
+  dev-static-data:
