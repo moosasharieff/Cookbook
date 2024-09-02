@@ -11,6 +11,7 @@ from core.models import Recipe, Tag, Ingredient, Nutrient
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for the Tags"""
+
     class Meta:
         model = Tag
         fields = ['id', 'name']
@@ -20,6 +21,7 @@ class TagSerializer(serializers.ModelSerializer):
 class NutrientSerializer(serializers.ModelSerializer):
     """Serializer to convert data while sending and retrieving
     nutrient database information"""
+
     class Meta:
         model = Nutrient
         fields = ['id', 'name', 'grams']
@@ -159,7 +161,21 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeDetailSerializer(RecipeSerializer):
     """Serializer to fetch single recipe details."""
+
     class Meta(RecipeSerializer.Meta):
         """Inherited attributes from `cls: RecipeSerializer`
         to build on this class."""
         fields = RecipeSerializer.Meta.fields + ['description']
+
+
+class RecipeImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to recipes."""
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'image']
+        read_only = ['id']
+        extra_kwargs = {
+            'image':
+                {'required': 'True'},
+        }
