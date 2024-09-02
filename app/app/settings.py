@@ -156,5 +156,5 @@ REST_FRAMEWORK = {
 
 # Enables uploading images on SwaggerUI
 SPECTACULAR_SETTINGS = {
-    'COMPONENT_SPLIT_REQUESTS': True
+    'COMPONENT_SPLIT_REQUEST': True
 }

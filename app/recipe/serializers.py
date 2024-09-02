@@ -165,7 +165,7 @@ class RecipeDetailSerializer(RecipeSerializer):
     class Meta(RecipeSerializer.Meta):
         """Inherited attributes from `cls: RecipeSerializer`
         to build on this class."""
-        fields = RecipeSerializer.Meta.fields + ['description']
+        fields = RecipeSerializer.Meta.fields + ['description', 'image']
 
 
 class RecipeImageSerializer(serializers.ModelSerializer):
