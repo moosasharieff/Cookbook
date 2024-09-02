@@ -445,7 +445,6 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
 
         # Creating ingredient and nutrient
         res = self.client.post(self._INGREDIENT_URL, payload, format='json')
-        print('res:', res.data)
 
         # Parsing data
         data = res.data
