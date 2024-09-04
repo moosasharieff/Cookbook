@@ -23,6 +23,15 @@ def recipe_image_file_path(instance, filename: str) -> str:
     return os.path.join('uploads', 'recipe', filename)
 
 
+def ingredient_image_file_path(instance, filename: str) -> str:
+    """Generate file path for new ingredient image."""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+
+    # Generate path
+    return os.path.join('uploads', 'ingredient', filename)
+
+
 class UserManager(BaseUserManager):
     """Manager for User model."""
 

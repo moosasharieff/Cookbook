@@ -137,3 +137,12 @@ class ModelTests(TestCase):
         file_path = models.recipe_image_file_path(None, 'example.jpg')
         # Assertions
         self.assertEqual(file_path, f'uploads/recipe/{uuid}.jpg')
+
+    @patch('core.models.uuid.uuid4')
+    def test_ingredient_image_file_path(self, mock_uuid):
+        """Test generating image path."""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.ingredient_image_file_path(None, 'example.jpg')
+        # Assertion
+        self.assertEqual(file_path, f'uploads/ingredient/{uuid}.jpg')
