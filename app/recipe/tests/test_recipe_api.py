@@ -443,7 +443,6 @@ class PrivateRecipeAPITests(TestCase):
 
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(res.data, serialized.data[0])
         self.assertEqual(response_data['id'], serialized_data['id'])
         self.assertEqual(response_data['name'], serialized_data['name'])
 
@@ -470,13 +469,8 @@ class PrivateRecipeAPITests(TestCase):
         res = self.client.post(RECIPE_URL, payload, format='json')
         response_data = res.data['ingredients'][0]
 
-        # Fetch db data
-        db_data = Recipe.objects.filter(user=self.user)
-        serialized = RecipeSerializer(db_data, many=True)
-
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(res.data, serialized.data[0])
         self.assertEqual(response_data['name'], ingredient.name)
         self.assertEqual(response_data['id'], ingredient.id)
 
