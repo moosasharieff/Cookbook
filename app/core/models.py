@@ -114,6 +114,7 @@ class Ingredient(models.Model):
     )
     name = models.CharField(max_length=255)
     nutrients = models.ManyToManyField('Nutrient')
+    image = models.ImageField(null=True, upload_to=ingredient_image_file_path)
 
     def __str__(self):
         """String representation on Ingredient database."""

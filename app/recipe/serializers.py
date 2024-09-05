@@ -37,7 +37,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'nutrients']
+        fields = ['id', 'name', 'image', 'nutrients']
         read_only = ['id']
 
     def _get_or_create_nutrients(self, ingredient: Ingredient,
@@ -178,4 +178,16 @@ class RecipeImageSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'image':
                 {'required': 'True'},
+        }
+
+
+class IngredientImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to ingredient"""
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'image']
+        read_only = ['id']
+        extra_kwargs = {
+            'image':
+                {'required': 'False'},
         }
