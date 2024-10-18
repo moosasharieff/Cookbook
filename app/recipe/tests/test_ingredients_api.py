@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 import tempfile
 import os
@@ -41,7 +40,6 @@ class TestRequirementsClass:
                          user: get_user_model,
                          nutrient_name: str,
                          grams: float) -> Nutrient:
-
         return Nutrient.objects.create(user=user,
                                        name=nutrient_name,
                                        grams=Decimal(grams))
@@ -49,6 +47,7 @@ class TestRequirementsClass:
 
 class PublicTestsIngredientAPI(TestCase, TestRequirementsClass):
     """Public / Unauthorized Test cases for ingredient api."""
+
     def setUp(self):
         """Setting up testing environment."""
         # Instantiating API Client
@@ -484,7 +483,8 @@ class TestIngredientImageUploads(TestCase, TestRequirementsClass):
         self.client.force_authenticate(self.user)
 
         # Create ingredient
-        self.ingredient = self._create_ingredient(user=self.user, name='Potato')
+        self.ingredient = self._create_ingredient(
+            user=self.user, name='Potato')
 
     def tearDown(self):
         """Steps which execute at the end of every test."""
