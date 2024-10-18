@@ -2,7 +2,9 @@
 # app/recipe/view.py
 Views for the recipe APIs.
 """
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -11,7 +13,9 @@ from .serializers import (RecipeSerializer,
                           RecipeDetailSerializer,
                           TagSerializer,
                           IngredientSerializer,
-                          NutrientSerializer)
+                          NutrientSerializer,
+                          RecipeImageSerializer,
+                          IngredientImageSerializer)
 
 
 class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
@@ -47,12 +51,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Return serializer class for list or detail request."""
         if self.action == 'list':
             return RecipeSerializer
+        elif self.action == 'upload_image':
+            return RecipeImageSerializer
 
         return self.serializer_class
 
     def perform_create(self, serializer):
         """Create API for creating a new recipe."""
         serializer.save(user=self.request.user)
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload image to recipe."""
+        recipe = self.get_object()
+        serializer = self.get_serializer(recipe, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(BaseRecipeAttrViewSet):
@@ -66,9 +83,27 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
 
+    def get_serializer_class(self):
+        """Return the serializer class for the request."""
+        if self.action == 'upload_image':
+            return IngredientImageSerializer
+
+        return self.serializer_class
+
     def perform_create(self, serializer):
         """API for creating new ingredient."""
         serializer.save(user=self.request.user)
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload image to INGREDIENT."""
+        ingredient = self.get_object()
+        serializer = self.get_serializer(ingredient, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NutrientViewSet(viewsets.GenericViewSet,

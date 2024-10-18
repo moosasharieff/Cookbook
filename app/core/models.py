@@ -2,6 +2,9 @@
 # app/core/models.py
 Models for Django application
 """
+import uuid
+import os
+
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import (
@@ -9,6 +12,24 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+
+
+def recipe_image_file_path(instance, filename: str) -> str:
+    """Generate file path for new recipe image."""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+
+    # generate path
+    return os.path.join('uploads', 'recipe', filename)
+
+
+def ingredient_image_file_path(instance, filename: str) -> str:
+    """Generate file path for new ingredient image."""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+
+    # Generate path
+    return os.path.join('uploads', 'ingredient', filename)
 
 
 class UserManager(BaseUserManager):
@@ -65,6 +86,7 @@ class Recipe(models.Model):
     link = models.CharField(max_length=255, blank=True)
     tags = models.ManyToManyField('Tag')
     ingredients = models.ManyToManyField('Ingredient')
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     def __str__(self):
         """Returns string representation of 'Recipe' model."""
@@ -92,6 +114,7 @@ class Ingredient(models.Model):
     )
     name = models.CharField(max_length=255)
     nutrients = models.ManyToManyField('Nutrient')
+    image = models.ImageField(null=True, upload_to=ingredient_image_file_path)
 
     def __str__(self):
         """String representation on Ingredient database."""

@@ -10,6 +10,8 @@ from django.contrib.auth import get_user_model
 
 from .. import models
 
+from unittest.mock import patch
+
 
 def create_user(email, password):
     """Create user directly in the db."""
@@ -126,3 +128,21 @@ class ModelTests(TestCase):
 
         # Assertions
         self.assertEqual(str(nutrient), nutrient.name)
+
+    @patch('core.models.uuid.uuid4')
+    def test_recipe_image_file_path(self, mock_uuid):
+        """Test generating image path."""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.recipe_image_file_path(None, 'example.jpg')
+        # Assertions
+        self.assertEqual(file_path, f'uploads/recipe/{uuid}.jpg')
+
+    @patch('core.models.uuid.uuid4')
+    def test_ingredient_image_file_path(self, mock_uuid):
+        """Test generating image path."""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.ingredient_image_file_path(None, 'example.jpg')
+        # Assertion
+        self.assertEqual(file_path, f'uploads/ingredient/{uuid}.jpg')

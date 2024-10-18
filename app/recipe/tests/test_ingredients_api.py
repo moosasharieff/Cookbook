@@ -1,5 +1,9 @@
 
 from decimal import Decimal
+import tempfile
+import os
+
+from PIL import Image
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -157,12 +161,6 @@ class PrivateTestsIngredientAPI(TestCase, TestRequirementsClass):
 
 class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
     """Test cases for Ingredients and Nutrients."""
-    # Todo: Possible test cases for Ingredients and Nutrients.
-    # Todo: 1. Create new nutrient with new ingredient
-    # Todo: 2. Create new ingredient with existing nutrient
-    # Todo: 5. Partially update nutrient on an ingredient.
-    # Todo: 6. Fully update nutrient on an ingredient.
-    # Todo: 7. Delete ingredient with nutrient.
 
     def setUp(self):
         """Setting up testing environment."""
@@ -445,7 +443,6 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
 
         # Creating ingredient and nutrient
         res = self.client.post(self._INGREDIENT_URL, payload, format='json')
-        print('res:', res.data)
 
         # Parsing data
         data = res.data
@@ -475,3 +472,56 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(db_data.exists())
         self.assertFalse(nutri_db_data.exists())
+
+
+class TestIngredientImageUploads(TestCase, TestRequirementsClass):
+    """Tests for testing environment."""
+    def setUp(self):
+        """Setting testing environment."""
+        # Create user and authenticate.
+        self.user = self._create_user('test@example.com', 'password@123')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+        # Create ingredient
+        self.ingredient = self._create_ingredient(user=self.user, name='Potato')
+
+    def tearDown(self):
+        """Steps which execute at the end of every test."""
+        # Deleting image to save memory.
+        self.ingredient.image.delete()
+
+    def ingredient_image_upload_url(self, ingredient_id: int) -> reverse:
+        """Generates adn return image url for ingredient."""
+        print("printing here")
+        return reverse('recipe:ingredient-upload-image', args=[ingredient_id])
+
+    def test_upload_image_to_recipe(self):
+        """Test uploading image to ingredient."""
+        url = self.ingredient_image_upload_url(self.ingredient.id)
+        print('url -->', url)
+        with tempfile.NamedTemporaryFile(suffix='.jpeg') as image_file:
+            img = Image.new('RGB', (10, 10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+
+            # HTTP Request
+            payload = {'image': image_file}
+            res = self.client.post(url, payload, format='multipart')
+
+        # Refresh Database
+        self.ingredient.refresh_from_db()
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.ingredient.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading invalid image"""
+        url = self.ingredient_image_upload_url(self.ingredient.id)
+        payload = {'image': 'InvalidImage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
