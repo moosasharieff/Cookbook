@@ -17,7 +17,24 @@ from .serializers import (RecipeSerializer,
                           RecipeImageSerializer,
                           IngredientImageSerializer)
 
+from drf_spectacular.utils import (extend_schema_view,
+                                   extend_schema,
+                                   OpenApiParameter,
+                                   OpenApiTypes)
 
+
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'assigned_only',
+                OpenApiTypes.INT, enum=[0, 1],
+                description='Filter by items assigned to recipes.'
+            )
+        ]
+    )
+
+)
 class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
                             mixins.ListModelMixin,
                             mixins.UpdateModelMixin,
@@ -31,9 +48,36 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
 
     def get_queryset(self):
         """Filter queryset to output data for authenticated user only."""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        assigned_only = bool(
+            int(self.request.query_params.get('assigned_only', 0))
+        )
+
+        queryset = self.queryset
+        if assigned_only:
+            queryset = queryset.filter(recipe__isnull=False)
+
+        return queryset.filter(
+            user=self.request.user).order_by('-name').distinct()
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'tags',
+                OpenApiTypes.STR,
+                description='Comma seperated list of Tag IDs '
+                            'to filter recipes.'
+            ),
+            OpenApiParameter(
+                'ingredients',
+                OpenApiTypes.STR,
+                description='Comma seperated list of Ingredient IDs '
+                            'to filter recipes.'
+            )
+        ]
+    )
+)
 class RecipeViewSet(viewsets.ModelViewSet):
     """View for managing Recipe API."""
     serializer_class = RecipeDetailSerializer
@@ -43,9 +87,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # Fetch all data from Recipe object
     queryset = Recipe.objects.all()
 
-    def get_queryset(self):
-        """Return recipes for authenticated user only."""
-        return self.queryset.filter(user=self.request.user).order_by('-id')
+    def _params_to_ints(self, params: str) -> list[int]:
+        """Convert a list of strings to integers."""
+        return [int(str_id) for str_id in params.split(',')]
+
+    def get_queryset(self) -> queryset:
+        """Return recipes for authenticated user only.
+        We are also able to filter the recipe based on the tags
+        and ingredients.
+        """
+        tags = self.request.query_params.get('tags')
+        ingredients = self.request.query_params.get('ingredients')
+        queryset = self.queryset
+
+        if tags:
+            tag_ids = self._params_to_ints(tags)
+            queryset = queryset.filter(tags__id__in=tag_ids)
+
+        if ingredients:
+            ingredient_ids = self._params_to_ints(ingredients)
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
+
+        return queryset.filter(
+            user=self.request.user).order_by('-id').distinct()
 
     def get_serializer_class(self):
         """Return serializer class for list or detail request."""

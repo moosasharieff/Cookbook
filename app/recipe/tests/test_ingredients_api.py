@@ -11,7 +11,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient, Nutrient
+from core.models import Ingredient, Nutrient, Recipe
 
 from ..serializers import IngredientSerializer
 
@@ -43,6 +43,23 @@ class TestRequirementsClass:
         return Nutrient.objects.create(user=user,
                                        name=nutrient_name,
                                        grams=Decimal(grams))
+
+    def _create_recipe(self,
+                       user: get_user_model,
+                       **params: dict) -> Recipe:
+        """Create recipe directly in db."""
+        defaults = {
+            'title': 'Sample Title Name',
+            'time_minutes': 25,
+            'price': Decimal('10.5'),
+            'description': 'This is a sample description.',
+            'link': 'https://example.com',
+        }
+
+        defaults.update(**params)
+        recipe = Recipe.objects.create(user=user, **defaults)
+
+        return recipe
 
 
 class PublicTestsIngredientAPI(TestCase, TestRequirementsClass):
@@ -472,9 +489,55 @@ class PrivateTestsIngredientAndNutrientsAPI(TestCase, TestRequirementsClass):
         self.assertFalse(db_data.exists())
         self.assertFalse(nutri_db_data.exists())
 
+    def test_filter_ingredient_assigned_to_recipes(self):
+        """Test listing ingredients which are assigned to recipes."""
+
+        ingredient1 = self._create_ingredient(user=self.user, name='Apple')
+        ingredient2 = self._create_ingredient(user=self.user, name='Chicken')
+
+        # Create recipe
+        recipe = self._create_recipe(user=self.user, title='Apple Pie')
+
+        # Adding ingredient to recipe
+        recipe.ingredients.add(ingredient1)
+
+        # HTTP Request
+        res = self.client.get(self._INGREDIENT_URL, {'assigned_only': 1})
+
+        # Serializetion
+        serialized_ingredient1 = IngredientSerializer(ingredient1)
+        serialized_ingredient2 = IngredientSerializer(ingredient2)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(serialized_ingredient1.data, res.data)
+        self.assertNotIn(serialized_ingredient2.data, res.data)
+
+    def test_filtered_ingredients_unique(self):
+        """Test filtered ingredient return unique list."""
+        # Create ingredient
+        ingredient = self._create_ingredient(user=self.user, name='Eggs')
+        self._create_ingredient(user=self.user, name='Lentils')
+
+        # Create recipes
+        recipe1 = self._create_recipe(user=self.user, title='Egg Curry')
+        recipe2 = self._create_recipe(user=self.user, title='Egg Masala')
+
+        # Adding ingredient to recipes
+        recipe1.ingredients.add(ingredient)
+        recipe2.ingredients.add(ingredient)
+
+        # HTTP Request
+        res = self.client.get(self._INGREDIENT_URL, {'assigned_only': 1})
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
 
 class TestIngredientImageUploads(TestCase, TestRequirementsClass):
     """Tests for testing environment."""
+
     def setUp(self):
         """Setting testing environment."""
         # Create user and authenticate.

@@ -18,6 +18,8 @@ from core.models import Recipe, Tag, Ingredient
 
 from ..serializers import RecipeSerializer, RecipeDetailSerializer
 
+from unittest import skip # noqa
+
 RECIPE_URL = reverse('recipe:recipe-list')
 
 
@@ -594,6 +596,65 @@ class PrivateRecipeAPITests(TestCase):
         # Assertions
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(recipe_exists)
+
+    def test_filter_by_tags(self):
+        """Test filtering recipes by tags."""
+        # Create recipes in DB
+        recipe1 = create_recipe(self.user, title='Indian Vegetable Curry')
+        recipe2 = create_recipe(self.user, title='Moong Daal')
+        recipe3 = create_recipe(self.user, title='Butter Chicken')
+
+        # Create tags in DB
+        tag1 = create_tag(self.user, 'vegan')
+        tag2 = create_tag(self.user, 'vegetarian')
+
+        # Adding tags to recipes
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+
+        # HTTP Request
+        params = {'tags': f'{tag1.id}, {tag2.id}'}
+        res = self.client.get(RECIPE_URL, params)
+
+        # Serialize recipe data with JSON
+        recipe1_serialized = RecipeSerializer(recipe1)
+        recipe2_serialized = RecipeSerializer(recipe2)
+        recipe3_serialized = RecipeSerializer(recipe3)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(recipe1_serialized.data, res.data)
+        self.assertIn(recipe2_serialized.data, res.data)
+        self.assertNotIn(recipe3_serialized.data, res.data)
+
+    def test_filter_by_ingredients(self):
+        """Test filter recipes by ingredients."""
+        # Create recipes
+        recipe1 = create_recipe(self.user, title='Chilli Chicken')
+        recipe2 = create_recipe(self.user, title='Gobi Aalu')
+        recipe3 = create_recipe(self.user, title='Chicken Burger')
+
+        # Create ingredients
+        ingredient = create_ingredient(self.user, ingredient_name='Chicken')
+
+        # Adding ingredients to recipes
+        recipe1.ingredients.add(ingredient)
+        recipe3.ingredients.add(ingredient)
+
+        # HTTP Request
+        params = {'ingredients': f'{ingredient.id}'}
+        res = self.client.get(RECIPE_URL, params)
+
+        # Serialized Recipe data to JSON
+        recipe1_serialized = RecipeSerializer(recipe1)
+        recipe2_serialized = RecipeSerializer(recipe2)
+        recipe3_serialized = RecipeSerializer(recipe3)
+
+        # Assertions
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(recipe1_serialized.data, res.data)
+        self.assertNotIn(recipe2_serialized.data, res.data)
+        self.assertIn(recipe3_serialized.data, res.data)
 
 
 class TestRecipeImageUploads(TestCase):
