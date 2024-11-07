@@ -23,6 +23,18 @@ from drf_spectacular.utils import (extend_schema_view,
                                    OpenApiTypes)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'assigned_only',
+                OpenApiTypes.INT, enum=[0, 1],
+                description='Filter by items assigned to recipes.'
+            )
+        ]
+    )
+
+)
 class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
                             mixins.ListModelMixin,
                             mixins.UpdateModelMixin,
@@ -44,7 +56,8 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
         if assigned_only:
             queryset = queryset.filter(recipe__isnull=False)
 
-        return queryset.filter(user=self.request.user).order_by('-name').distinct()
+        return queryset.filter(
+            user=self.request.user).order_by('-name').distinct()
 
 
 @extend_schema_view(
